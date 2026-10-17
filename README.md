@@ -38,7 +38,7 @@ Without `ANTHROPIC_API_KEY` or the AI binding the chat answers "could not answer
 
 ## Deploy
 
-Push to `main`. `.github/workflows/deploy.yml` needs the secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`,
+Push to `main`. `.github/workflows/deploy.yml` needs the secret `CLOUDFLARE_API_TOKEN` (the account id is built in),
 and optionally `ANTHROPIC_API_KEY`, `RESEND_API_KEY`, `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID`, `DEEPINFRA_API_KEY`.
 Daily AI spend caps are in `wrangler.toml` (`HUB_DAILY_CENTS` etc.).
 

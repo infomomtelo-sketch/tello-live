@@ -1,6 +1,6 @@
 # Deploys tello.live to Cloudflare whenever main changes.
-# Needs the repository secret CLOUDFLARE_API_TOKEN and the variable/secret CLOUDFLARE_ACCOUNT_ID
-# (Settings > Secrets and variables > Actions). Optional secrets copied to the Worker when set:
+# Needs the repository secret CLOUDFLARE_API_TOKEN (Settings > Secrets and variables > Actions).
+# Optional secrets copied to the Worker when set:
 # ANTHROPIC_API_KEY, RESEND_API_KEY, ELEVENLABS_API_KEY, ELEVENLABS_VOICE_ID, DEEPINFRA_API_KEY.
 name: Deploy
 
@@ -18,12 +18,13 @@ jobs:
     runs-on: ubuntu-latest
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      # The account id is not a secret (it is the same account the old workflow used); a CLOUDFLARE_ACCOUNT_ID secret overrides it.
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || '701117dde6af00d42bac3c4058b660be' }}
     steps:
-      - name: Check for the Cloudflare secrets
+      - name: Check for the Cloudflare token
         run: |
-          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
-            echo "::error::Add CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID under Settings > Secrets and variables > Actions, then re-run."
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "::error::Add the CLOUDFLARE_API_TOKEN secret under Settings > Secrets and variables > Actions, then re-run."
             exit 1
           fi
       - uses: actions/checkout@v4
