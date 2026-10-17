@@ -16,12 +16,14 @@ Tello only: its own Worker, database, budgets and deploys.
 | `/build` | Ported (proxies ownsite.app) |
 | Meet Tello page `/m/<id>` (old Pro plan, no longer sold) | Not ported |
 | `/make`, `/videos` (Tello business videos only), `/website`, `/social-setup`, video requests | Ported |
-| `/meeting` (talking demo; its Rentals persona calls the EC Rental chat, so it is held back and removed from the menus and the chat's links until reworked), SEO how-to guides, sitemap, `llms.txt`, page-view counter | Not ported |
+| How-to guide pages (6), `sitemap.xml`, `llms.txt`, `robots.txt` | Ported (static files) |
+| `/meeting` (talking demo; its Rentals persona calls the EC Rental chat, so it is held back and removed from the menus and the chat's links until reworked), page-view counter | Not ported |
 | Own Privacy / Terms | Not written: `/privacy` and `/terms` redirect to ecrentalpm.com |
 | Domain tello.live | Still served by the ec-rental Worker. See `docs/CUTOVER.md` |
 
-The chat and `/business` do not link to `/meeting` any more (held back), so do not cut the domain over until
-those are ported (or the links are removed).
+Every internal link on the site now points at a page or route that exists. Before moving the domain: test the Stripe
+checkout with a test key, deploy to the workers.dev address and click through it, and decide on Tello's own
+Privacy and Terms.
 
 ## Develop
 

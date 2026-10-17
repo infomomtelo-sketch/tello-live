@@ -1,0 +1,21 @@
+# Tello
+
+> Tello is an AI assistant for small businesses. It answers customers' questions on a business's website around the clock, takes the details of anyone who wants a quote or a callback, briefs the owner each day, and makes short videos. Not for health care businesses.
+
+## Pages
+- [Tello for your business](https://tello.live/business): set up a chat assistant for your website. chat free with no card, including a greeting and a daily briefing; Green Tello $19/month after 7 days free; Gold Tello $49/month, coming soon.
+- [Pick your Tello](https://tello.live/models): the free Tello chat (website chat, available now), Green Tello (your private assistant: $19/month after 7 days free, and inside EC Rental for landlords) and Gold Tello ($49/month, coming soon).
+- [Ask Tello](https://tello.live/) (home): a free AI chat (daily limits, no sign-up). Ask anything; Tello can search the web with sources, read a web page you link, look at a photo or PDF and answer out loud. Also explains what Tello does, what it costs and where to start.
+- [AI chatbot for small business](https://tello.live/ai-chatbot-for-small-business): how the website chat assistant works.
+- [Free AI video maker](https://tello.live/free-ai-video-maker): chat a few words and a web address to get a short narrated video.
+- [How to answer customers when your business is closed](https://tello.live/how-to-answer-customers-when-your-business-is-closed): after-hours message, FAQ and chat assistant.
+- [What to put on a small business FAQ page](https://tello.live/small-business-website-faq-page): which questions to include and how to write answers.
+- [How to follow up with new leads](https://tello.live/how-to-follow-up-with-new-leads): a simple routine for replying and tracking leads.
+- [Social media setup helper](https://tello.live/social-setup): free tool with handle ideas, bios, profile pictures and a sign-up checklist for each network.
+- [Get a website](https://tello.live/website): set up Tello, then build the website at tello.live/build (powered by OwnSite) with the Tello chat on every page; bigger projects get a Claude Code prompt that builds them in the owner's own GitHub and hosting.
+- [How to make a short business video](https://tello.live/how-to-make-a-short-business-video): structure, captions and a free video maker.
+- [Make a video](https://tello.live/make): the free video maker.
+- [Sample videos](https://tello.live/videos): examples, and a form to request a polished marketing video.
+
+## Contact
+support@tello.live

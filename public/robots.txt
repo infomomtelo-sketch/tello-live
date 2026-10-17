@@ -1,3 +1,8 @@
 User-agent: *
 Allow: /
 Disallow: /api/
+Disallow: /b/
+Disallow: /embed/
+Disallow: /business/manage
+
+Sitemap: https://tello.live/sitemap.xml
