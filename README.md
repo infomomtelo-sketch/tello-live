@@ -46,6 +46,4 @@ The chat's product facts (`HUB_SYSTEM` in `src/tello-hub.ts`) and the pages must
 
 - Business chat and Green Tello: prices, 7-day trial, 50/300 message caps and Confirm-only actions are checked against `src/biz-bots.ts` and `src/biz-green.ts`.
 - EC Rental (ecrentalpm.com): Solo $29 with the $3-for-3-months offer through 2026-12-31; Green Tello included in every plan.
-- Title22 (title-22.com): RCFE/ARF compliance with Tello as the AI assistant. The chat links to it but quotes no Title22 prices, because Title22's own marketing site ($29/$79) and app notes ($49/$79/$249) disagree.
 - Gold Tello is coming soon; nothing in the code implements it.
-- This repo never touches the Title22 repos.

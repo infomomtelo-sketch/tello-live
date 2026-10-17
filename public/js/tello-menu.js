@@ -11,8 +11,7 @@
     ['Talk to Tello', [[chat, 'Ask Tello', '/', 'Free AI chat']]],
     ['For your business', [[chat, 'Tello for your business', '/business', 'Answers customers, takes leads. Free'], [I('<circle cx="12" cy="12" r="8"/><path d="M12 8v8M8 12h8"/>'), 'Pick your Tello', '/models', 'Free chat, Green $19, Gold $49'], [I('<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/>'), 'No website yet?', '/website', 'A website with Tello, or just the website']]],
     ['Create', [[vid, 'Make a video', '/make', 'Free'], [play, 'Sample videos', '/videos', ''], [share, 'Social media setup', '/social-setup', '']]],
-    ['For landlords', [[home, 'Tello for landlords', 'https://ecrentalpm.com', 'EC Rental on ecrentalpm.com']]],
-    ['For care homes', [[home, 'Tello for care homes', 'https://title-22.com', 'Title22: RCFE and ARF compliance']]]
+    ['For landlords', [[home, 'Tello for landlords', 'https://ecrentalpm.com', 'EC Rental on ecrentalpm.com']]]
   ];
   var guides = [['AI chatbot for small business', '/ai-chatbot-for-small-business'], ['Free AI video maker', '/free-ai-video-maker'], ['Answering customers after hours', '/how-to-answer-customers-when-your-business-is-closed'], ['Small business FAQ page', '/small-business-website-faq-page'], ['Following up with new leads', '/how-to-follow-up-with-new-leads'], ['Making a short business video', '/how-to-make-a-short-business-video']];
   var here = location.pathname.replace(/\/$/, '') || '/';
