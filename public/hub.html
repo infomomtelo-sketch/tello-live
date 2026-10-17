@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ask Tello: a free AI assistant for small business</title>
+  <link rel="icon" href="/brand/tello-mark.svg" type="image/svg+xml" />
+  <link rel="icon" href="/brand/tello-icon-32.png" sizes="32x32" type="image/png" />
+  <link rel="apple-touch-icon" href="/brand/tello-apple-touch-180.png" />
+  <meta name="description" content="Ask Tello anything, free to try: it searches the web, reads your website and looks at photos. For businesses, Tello answers customers 24/7 and takes leads." />
+  <link rel="canonical" href="https://tello.live/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Ask Tello: a free AI assistant" />
+  <meta property="og:description" content="Answers your customers around the clock, takes leads, briefs you each day and makes videos." />
+  <meta property="og:url" content="https://tello.live/" />
+  <meta property="og:image" content="https://tello.live/brand/tello-og-1200x630.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta property="og:site_name" content="Tello" />
+  <script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "What is Tello?", "acceptedAnswer": {"@type": "Answer", "text": "Tello is an AI assistant for small businesses. It answers customers' questions on your website around the clock, takes the details of anyone who wants a quote or a callback, briefs you each day on who is waiting, and makes short videos."}}, {"@type": "Question", "name": "What can the free Tello chat do?", "acceptedAnswer": {"@type": "Answer", "text": "Ask it anything. Tello can search the web and list its sources, read a website you link (a few pages), look at a photo or PDF you attach, and answer out loud. It is free to try with no sign-up, with daily limits."}}, {"@type": "Question", "name": "How much does Tello cost?", "acceptedAnswer": {"@type": "Answer", "text": "The Tello chat for your business website is free, with no card needed, and it includes an opening greeting and a daily briefing about your business. Green Tello, your private assistant that knows your leads and drafts and sends replies after you confirm, is $19 a month after 7 days free. Gold Tello, for owners with more than one business or a team, is $49 a month and coming soon. The video maker is free."}}, {"@type": "Question", "name": "How do I add Tello to my website?", "acceptedAnswer": {"@type": "Answer", "text": "Paste your website link on tello.live (no website yet? describe your business instead). Tello reads it and builds your assistant, and you add it to your site with one line of code or share your own Tello chat link."}}, {"@type": "Question", "name": "Can Tello make mistakes?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Tello is an AI and can be wrong. It answers only from the information a business gives it, tells customers it is an AI, and offers to pass questions to the business."}}, {"@type": "Question", "name": "Is the Tello video maker free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Chat a few words and paste your web address, and Tello builds a short narrated video for free."}}, {"@type": "Question", "name": "Can health care businesses use Tello?", "acceptedAnswer": {"@type": "Answer", "text": "No. Tello is not available for health care or medical businesses."}}]}]}</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,800&family=Inter:wght@400;500;600;700;800&display=swap" />
+  <meta name="theme-color" content="#121110" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    /* tello.live front page: dark ground, living gold orb. Every other tello.live page stays light. */
+    :root { color-scheme: dark; --bg: #121110; --card: #1b1a17; --input: #1d1c19; --ink: #f6f1e6; --body: #c9c1b0; --muted: #a39c8e; --line: #2c2a26; --line2: #3a352a; --gold: #ffc61a; --goldInk: #1a1400; --online: #5fd38a; --hover: #24221e; }
+    html { -webkit-text-size-adjust: 100%; background: var(--bg); }
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--ink); line-height: 1.5; min-height: 100vh; }
+    a { color: var(--gold); }
+    button { font: inherit; color: inherit; cursor: pointer; }
+    :focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+    .top { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: .6rem; padding: .6rem 16px; background: rgba(18,17,16,.92); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+    .icon-btn { display: inline-flex; align-items: center; justify-content: center; gap: .4rem; min-width: 44px; height: 44px; padding: 0 .7rem; background: var(--card); border: 1px solid var(--line2); border-radius: 12px; font-weight: 600; font-size: .9rem; color: var(--ink); white-space: nowrap; }
+    .icon-btn:hover { border-color: var(--gold); }
+    .brand { display: inline-flex; align-items: center; gap: .55rem; font-family: 'Bricolage Grotesque', 'Inter', system-ui, sans-serif; font-weight: 800; font-size: 1.25rem; letter-spacing: -.02em; text-decoration: none; color: var(--ink); margin-right: auto; }
+    .brand b { font-weight: 800; } .brand span { color: var(--gold); }
+    .brand img { border-radius: 9px; }
+    #voiceBtn[aria-pressed="false"] { opacity: .7; }
+    main { max-width: 760px; margin: 0 auto; padding: 1.6rem 16px 2.5rem; }
+    /* Hero: collapses once the conversation starts. */
+    .hero { text-align: center; display: flex; flex-direction: column; align-items: center; max-height: 640px; overflow: hidden; padding-bottom: 12px; transition: max-height .4s ease, opacity .3s ease, margin .4s ease; }
+    body.chatting .hero { max-height: 0; opacity: 0; margin: 0; pointer-events: none; }
+    .hero .orb { margin: .6rem 0 1.1rem; }
+    h1 { font-family: 'Bricolage Grotesque', 'Inter', system-ui, sans-serif; font-weight: 800; font-size: clamp(2rem, 8vw, 3rem); letter-spacing: -.035em; line-height: 1.02; margin-top: .55rem; }
+    h1 span { display: block; color: var(--gold); }
+    .hear { display: inline-flex; align-items: center; gap: .4rem; margin-top: .8rem; min-height: 40px; background: transparent; color: var(--ink); border: 1px solid var(--line2); border-radius: 999px; padding: .35rem .95rem; font-weight: 600; font-size: .88rem; }
+    .hear:hover { border-color: var(--gold); }
+    .hear.pulse { animation: pulse 1.6s ease-in-out infinite; }
+    #chat .tc-chip { transition: box-shadow .25s, transform .25s; }
+    #chat .tc-chip.tour-lit { box-shadow: 0 0 0 2px var(--gold), 0 0 20px rgba(255,210,63,.45); transform: translateY(-2px); }
+    @keyframes pulse { 50% { box-shadow: 0 0 0 8px rgba(255,198,26,.25); } }
+    /* Compact header while chatting. */
+    .cbar { display: none; position: sticky; top: 64px; z-index: 15; align-items: center; gap: .65rem; margin: -1.6rem -16px 1rem; padding: .55rem 16px; background: rgba(18,17,16,.94); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+    body.chatting .cbar { display: flex; }
+    .cbar .who { display: flex; flex-direction: column; line-height: 1.2; margin-right: auto; min-width: 0; }
+    .cbar b { font-size: 1rem; }
+    #cstatus { font-size: .8rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    #cstatus.run { background: linear-gradient(90deg, var(--muted) 0%, var(--ink) 50%, var(--muted) 100%); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: shimmer 1.6s linear infinite; }
+    @keyframes shimmer { to { background-position: -200% 0; } }
+    .cbar button { min-height: 44px; background: var(--card); border: 1px solid var(--line2); border-radius: 999px; padding: 0 .95rem; font-size: .85rem; font-weight: 600; }
+    /* The chat (public/js/tello-chat.js), in the dark tokens. */
+    #chat { margin-top: 1.4rem; --tc-ink: #f6f1e6; --tc-body: #c9c1b0; --tc-muted: #a39c8e; --tc-line: #3a352a; --tc-card: #1b1a17; --tc-input: #1d1c19; --tc-link: #ffc61a; --tc-hover: #24221e; --tc-ok: #5fd38a; --tc-err-bg: #3a1d1d; --tc-err: #ffc4c4; --tc-ring: rgba(255,198,26,.3); }
+    body.chatting #chat { margin-top: 0; }
+    #chat .tc-box { padding: .7rem .6rem .6rem .7rem; border-radius: 24px; }
+    #chat .tc-box textarea { font-size: 1.05rem; }
+    #chat .tc-log { margin-bottom: 1rem; }
+    body.chatting #chat .tc-box { position: sticky; bottom: max(12px, env(safe-area-inset-bottom)); z-index: 5; box-shadow: 0 14px 0 14px var(--bg); }
+    body.chatting #chat .tc-box:focus-within { box-shadow: 0 0 0 4px rgba(255,198,26,.3), 0 14px 0 14px var(--bg); }
+    body.chatting #chat .tc-starters { display: none; }
+    #chat .tc-starters { justify-content: center; }
+    .more { margin-top: 2rem; }
+    body.chatting .more { display: none; }
+    .links { display: flex; justify-content: center; flex-wrap: wrap; gap: .4rem 1.4rem; }
+    .links a { display: inline-flex; align-items: center; min-height: 44px; color: var(--muted); text-decoration: none; font-weight: 600; font-size: .92rem; }
+    .links a:hover { color: var(--gold); }
+    .faqv { max-width: 40rem; margin-left: auto; margin-right: auto; }
+    .faqv h2 { font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 700; text-align: center; margin-bottom: .6rem; }
+    .faqv details { border-bottom: 1px solid var(--line); }
+    .faqv summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; font-weight: 600; font-size: .95rem; color: var(--ink); }
+    .faqv p { color: var(--body); font-size: .92rem; padding: 0 0 .8rem; }
+    .note { font-size: .78rem; color: var(--muted); text-align: center; margin: 1.6rem auto 0; max-width: 34rem; }
+    .scrim { position: fixed; inset: 0; background: rgba(0,0,0,.55); opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 30; }
+    body.menu-open .scrim { opacity: 1; pointer-events: auto; }
+    #menu { position: fixed; z-index: 40; top: 0; bottom: 0; left: 0; width: min(86vw, 340px); background: var(--card); border-right: 1px solid var(--line); transform: translateX(-102%); transition: transform .22s ease; overflow-y: auto; padding: .8rem 14px 2rem; visibility: hidden; }
+    body.menu-open #menu { transform: none; visibility: visible; }
+    @media (prefers-reduced-motion: reduce) { #menu, .scrim, .hero { transition: none; } .hear.pulse, #cstatus.run { animation: none; } #cstatus.run { color: var(--muted); background: none; } }
+    .mhead { display: flex; align-items: center; justify-content: space-between; margin-bottom: .6rem; }
+    #menu h2 { font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); margin: 1.1rem 0 .35rem; }
+    #menu a.item, #menu button.item { display: flex; align-items: center; gap: .7rem; width: 100%; text-align: left; background: transparent; border: 0; border-radius: 10px; padding: .6rem .5rem; color: var(--ink); text-decoration: none; font-weight: 600; font-size: .96rem; }
+    #menu a.item:hover, #menu button.item:hover { background: var(--hover); }
+    #menu a.item small { display: block; font-weight: 400; color: var(--muted); font-size: .8rem; }
+    #menu .item svg { flex: none; color: var(--gold); }
+    #menu a.sub { display: block; padding: .4rem .5rem .4rem 2.2rem; color: var(--muted); text-decoration: none; font-size: .9rem; }
+    #menu a.sub:hover { color: var(--ink); }
+    .faq details { border-bottom: 1px solid var(--line); padding: .55rem .5rem; } .faq summary { cursor: pointer; font-weight: 600; font-size: .92rem; } .faq p { margin-top: .4rem; color: var(--muted); font-size: .88rem; }
+    .legal { margin-top: 1.4rem; font-size: .82rem; color: var(--muted); padding: 0 .5rem; }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <button type="button" class="icon-btn" id="menuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg><span>Menu</span></button>
+    <a class="brand" href="/"><img src="/brand/tello-mark.svg" width="34" height="34" alt="" /><b>tello<span>.live</span></b></a>
+    <button type="button" class="icon-btn" id="voiceBtn" aria-pressed="true" aria-label="Tello's voice is on. Tap to turn it off" title="Tello's voice"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/></svg><span id="voiceLbl">Voice on</span></button>
+  </header>
+  <div class="scrim" id="scrim"></div>
+  <nav id="menu" aria-label="Tello menu" aria-hidden="true">
+    <div class="mhead"><strong>Everything in Tello</strong><button type="button" class="icon-btn" id="menuClose" aria-label="Close menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <h2>Talk to Tello</h2>
+    <button type="button" class="item" id="askItem"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg><span>Ask Tello</span></button>
+    <a class="item" href="/meeting"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M15.5 14.3c2.8-.4 5.5 1.5 5.5 4.7"/></svg><span>Team meeting<small>Four Tellos, ask out loud</small></span></a>
+    <h2>For your business</h2>
+    <a class="item" href="/business"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg><span>Tello for your business<small>Answers customers, takes leads. Free</small></span></a>
+    <a class="item" href="/website"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/></svg><span>No website yet?<small>A website with Tello, or just the website</small></span></a>
+    <h2>Create</h2>
+    <a class="item" href="/make"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.5v5l4.5-2.5z"/></svg><span>Make a video<small>Free</small></span></a>
+    <a class="item" href="/videos"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg><span>Sample videos</span></a>
+    <a class="item" href="/social-setup"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="m8.2 10.8 7.6-3.6M8.2 13.2l7.6 3.6"/></svg><span>Social media setup</span></a>
+    <h2>For landlords</h2>
+    <a class="item" href="https://ecrentalpm.com"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg><span>Tello for landlords<small>EC Rental on ecrentalpm.com</small></span></a>
+    <h2>Guides</h2>
+    <a class="sub" href="/ai-chatbot-for-small-business">AI chatbot for small business</a>
+    <a class="sub" href="/free-ai-video-maker">Free AI video maker</a>
+    <a class="sub" href="/how-to-answer-customers-when-your-business-is-closed">Answering customers after hours</a>
+    <a class="sub" href="/small-business-website-faq-page">Small business FAQ page</a>
+    <a class="sub" href="/how-to-follow-up-with-new-leads">Following up with new leads</a>
+    <a class="sub" href="/how-to-make-a-short-business-video">Making a short business video</a>
+    <h2>Questions</h2>
+    <div class="faq"><details><summary>What is Tello?</summary><p>Tello is an AI assistant for small businesses. It answers customers&#x27; questions on your website around the clock, takes the details of anyone who wants a quote or a callback, briefs you each day on who is waiting, and makes short videos.</p></details><details><summary>How much does Tello cost?</summary><p>The Tello chat for your business website is free, with no card needed, and it includes an opening greeting and a daily briefing about your business. Green Tello, your private assistant that knows your leads and drafts and sends replies after you confirm, is $19 a month after 7 days free. Gold Tello, for owners with more than one business or a team, is $49 a month and coming soon. The video maker is free.</p></details><details><summary>How do I add Tello to my website?</summary><p>Paste your website link on tello.live (no website yet? describe your business instead). Tello reads it and builds your assistant, and you add it to your site with one line of code or share your own Tello chat link.</p></details><details><summary>Can Tello make mistakes?</summary><p>Yes. Tello is an AI and can be wrong. It answers only from the information a business gives it, tells customers it is an AI, and offers to pass questions to the business.</p></details><details><summary>Is the Tello video maker free?</summary><p>Yes. Chat a few words and paste your web address, and Tello builds a short narrated video for free.</p></details><details><summary>Can health care businesses use Tello?</summary><p>No. Tello is not available for health care or medical businesses.</p></details></div>
+    <p class="legal"><a href="/privacy">Privacy</a> &middot; <a href="/terms">Terms</a> &middot; <a href="mailto:support@tello.live">support@tello.live</a></p>
+  </nav>
+  <main>
+    <div class="cbar" aria-label="Tello">
+      <span class="orb-sm" id="orbSmall"></span>
+      <div class="who"><b>Tello</b><span id="cstatus" aria-live="polite">Online &middot; Tello is an AI</span></div>
+      <button type="button" id="newChat">New chat</button>
+    </div>
+    <section class="hero" id="hero">
+      <span class="orb" id="orbHero"></span>
+      <h1>Hi, I'm Tello.<span>Ask me anything.</span></h1>
+      <button type="button" class="hear" id="hear"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg><span id="hearLbl">Hear Tello</span></button>
+    </section>
+    <section id="chat" aria-label="Chat with Tello"></section>
+    <nav class="more links" aria-label="Put Tello to work"><a href="/business">Business</a><a href="/make">Video</a><a href="/meeting">Meeting</a><a href="/videos">Watch</a></nav>
+    <section class="more faqv" aria-labelledby="faqH">
+      <h2 id="faqH">Questions about Tello</h2>
+      <details><summary>What is Tello?</summary><p>Tello is an AI assistant for small businesses. It answers customers&#x27; questions on your website around the clock, takes the details of anyone who wants a quote or a callback, briefs you each day on who is waiting, and makes short videos.</p></details>
+      <details><summary>What can the free Tello chat do?</summary><p>Ask it anything. Tello can search the web and list its sources, read a website you link (a few pages), look at a photo or PDF you attach, and answer out loud. It is free to try with no sign-up, with daily limits.</p></details>
+      <details><summary>How much does Tello cost?</summary><p>The Tello chat for your business website is free, with no card needed, and it includes an opening greeting and a daily briefing about your business. Green Tello, your private assistant that knows your leads and drafts and sends replies after you confirm, is $19 a month after 7 days free. Gold Tello, for owners with more than one business or a team, is $49 a month and coming soon. The video maker is free.</p></details>
+      <details><summary>How do I add Tello to my website?</summary><p>Paste your website link on tello.live (no website yet? describe your business instead). Tello reads it and builds your assistant, and you add it to your site with one line of code or share your own Tello chat link.</p></details>
+      <details><summary>Can Tello make mistakes?</summary><p>Yes. Tello is an AI and can be wrong. It answers only from the information a business gives it, tells customers it is an AI, and offers to pass questions to the business.</p></details>
+      <details><summary>Is the Tello video maker free?</summary><p>Yes. Chat a few words and paste your web address, and Tello builds a short narrated video for free.</p></details>
+      <details><summary>Can health care businesses use Tello?</summary><p>No. Tello is not available for health care or medical businesses.</p></details>
+    </section>
+    <p class="note">Tello is an AI and can be wrong. Not for health care. <a href="/privacy">Privacy</a></p>
+  </main>
+  <script src="/js/tello-talk.js"></script>
+  <script src="/js/tello-orb.js"></script>
+  <script src="/js/tello-chat.js"></script>
+  <script>
+  (function () {
+    var voiceOn = true; try { voiceOn = localStorage.getItem('tello_hub_voice2') !== 'off'; } catch (e) {}
+    var cstatus = document.getElementById('cstatus'), IDLE = 'Online · Tello is an AI';
+    var intro = null, hear = document.getElementById('hear'), hl = document.getElementById('hearLbl');
+    if (window.TelloOrb) { TelloOrb.mount(document.getElementById('orbHero'), { size: 132 }); TelloOrb.mount(document.getElementById('orbSmall'), { size: 36 }); }
+    var chat = TelloChat.mount(document.getElementById('chat'), {
+      mode: 'page', firstPrimary: true,
+      starters: ['Try Tello on my website', 'What does it cost?', 'How do I make a free video?'],
+      onChatting: function (on) { document.body.classList.toggle('chatting', on); if (on) stopIntro(); },
+      onStatus: function (t) { cstatus.textContent = t || IDLE; cstatus.classList.toggle('run', !!t && t !== 'Speaking…'); },
+      speakTyped: function () { return voiceOn; },
+      getVoice: function () { return voiceOn; },
+      setVoice: function (on) { setVoice(on); }
+    });
+    document.getElementById('newChat').addEventListener('click', function () { chat.reset(); window.scrollTo(0, 0); chat.focus(); });
+
+    // Voice on/off for Tello's spoken answers.
+    var vb = document.getElementById('voiceBtn'), vl = document.getElementById('voiceLbl');
+    function paintVoice() { vb.setAttribute('aria-pressed', String(voiceOn)); vl.textContent = voiceOn ? 'Voice on' : 'Voice off'; vb.setAttribute('aria-label', voiceOn ? "Tello's voice is on. Tap to turn it off" : "Tello's voice is off. Tap to turn it on"); }
+    function setVoice(on) { voiceOn = on; try { localStorage.setItem('tello_hub_voice2', voiceOn ? 'on' : 'off'); } catch (e) {} if (!voiceOn) { if (window.ECTelloTalk) ECTelloTalk.stop(); stopIntro(); } paintVoice(); }
+    vb.addEventListener('click', function () { setVoice(!voiceOn); });
+    paintVoice();
+
+    // Tello's spoken tour (recorded clips in Tello's own voice): an intro, then each sample question is lit up while
+    // Tello explains it, then a closing line. Browsers often block sound before a first tap, so if the page cannot
+    // start talking by itself, the tour starts on the visitor's first tap anywhere that is not already an action.
+    var TOUR = [{ s: 'tour-intro' }, { s: 'tour-site', chip: 0 }, { s: 'tour-cost', chip: 1 }, { s: 'tour-video', chip: 2 }, { s: 'tour-end' }];
+    var tour = null, tourAudio = null, orbHooked = false;
+    function lit(i) { var cs = document.querySelectorAll('#chat .tc-chip'); for (var j = 0; j < cs.length; j++) cs[j].classList.toggle('tour-lit', j === i); }
+    function stopIntro() {
+      if (tour) { tour = null; try { tourAudio.pause(); } catch (e) {} if (window.TelloOrb && TelloOrb.state === 'speaking') TelloOrb.set('idle'); }
+      lit(-1); hl.textContent = 'Hear Tello'; hear.classList.remove('pulse');
+    }
+    function playStep(t, i) {
+      if (tour !== t) return;
+      if (i >= TOUR.length) { stopIntro(); return; }
+      var a = tourAudio; a.src = '/media/tello-voice/' + TOUR[i].s + '.mp3';
+      a.onended = function () { playStep(t, i + 1); };
+      a.onerror = function () { if (tour === t) stopIntro(); };
+      var p = a.play();
+      lit(TOUR[i].chip === undefined ? -1 : TOUR[i].chip);
+      if (p && p.catch) p.catch(function () { if (tour === t) { tour = null; lit(-1); if (t.auto) armTap(); else stopIntro(); } });
+    }
+    function playIntro(auto) {
+      stopIntro(); if (!tourAudio) tourAudio = new Audio(); var t = tour = { auto: auto };
+      hl.textContent = 'Stop';
+      if (window.TelloOrb) { TelloOrb.set('speaking'); if (!orbHooked) { orbHooked = true; TelloOrb.follow(tourAudio); } }
+      playStep(t, 0);
+    }
+    function armTap() {
+      hl.textContent = 'Tap to hear Tello'; hear.classList.add('pulse');
+      var evs = ['pointerdown', 'keydown'];
+      function go(e) {
+        evs.forEach(function (n) { document.removeEventListener(n, go, true); });
+        if (!voiceOn || chat.chatting || tour) return;
+        var el = e.target && e.target.closest ? e.target.closest('#hear, #chat, #menu, #menuBtn, #voiceBtn, .more, a, button, textarea, input') : null;
+        if (el) { stopIntro(); return; }
+        if (window.TelloOrb) TelloOrb.unlock();
+        playIntro(false);
+      }
+      evs.forEach(function (n) { document.addEventListener(n, go, true); });
+    }
+    hear.addEventListener('click', function () { if (tour) stopIntro(); else { if (window.ECTelloTalk) ECTelloTalk.stop(); if (window.TelloOrb) TelloOrb.unlock(); playIntro(false); } });
+    if (voiceOn && !chat.chatting) playIntro(true);
+
+    // Slide menu.
+    var menu = document.getElementById('menu'), mb = document.getElementById('menuBtn');
+    function setMenu(open) { document.body.classList.toggle('menu-open', open); mb.setAttribute('aria-expanded', String(open)); menu.setAttribute('aria-hidden', String(!open)); if (open) document.getElementById('menuClose').focus(); else mb.focus(); }
+    mb.addEventListener('click', function () { setMenu(true); });
+    document.getElementById('menuClose').addEventListener('click', function () { setMenu(false); });
+    document.getElementById('scrim').addEventListener('click', function () { setMenu(false); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && document.body.classList.contains('menu-open')) setMenu(false); });
+    document.getElementById('askItem').addEventListener('click', function () { setMenu(false); chat.focus(); });
+  })();
+  </script>
+</body>
+</html>

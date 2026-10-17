@@ -1,0 +1,44 @@
+name = "tello-live"
+main = "src/index.ts"
+compatibility_date = "2026-09-25"
+compatibility_flags = ["nodejs_compat"]
+
+workers_dev = true
+# The custom domain is deliberately NOT routed here yet: tello.live is still served by the ec-rental-landing-page
+# Worker. Uncomment these at cutover (see docs/CUTOVER.md); deploying them moves the domain.
+# routes = [
+#   { pattern = "tello.live", custom_domain = true },
+#   { pattern = "www.tello.live", custom_domain = true },
+# ]
+
+[ai]
+binding = "AI"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+not_found_handling = "404-page"
+run_worker_first = ["/", "/api/*", "/privacy", "/terms"]
+
+# No database_id: wrangler creates the database on first deploy and records the id.
+[[d1_databases]]
+binding = "DB"
+database_name = "tello-live-db"
+
+[vars]
+# Must be an address on a domain verified in Resend. RESEND_API_KEY is a secret.
+EMAIL_FROM = "Tello <info@tello.live>"
+# Anthropic prices for the daily spend cap, and the cap itself (Claude Sonnet 5.5: $2/M input, $10/M output; search $10/1,000).
+# When the day's spend reaches HUB_DAILY_CENTS (500 = $5), the chat switches to the free Workers AI model until midnight UTC.
+HUB_IN_PER_M = "2"
+HUB_OUT_PER_M = "10"
+HUB_SEARCH_PER_K = "10"
+HUB_DAILY_CENTS = "500"
+BIZ_DAILY_CENTS = "1000"
+APP_DAILY_CENTS = "1500"
+
+# Per-IP limit for the AI chat.
+[[ratelimits]]
+name = "CHAT_LIMITER"
+namespace_id = "2002"
+simple = { limit = 20, period = 60 }
