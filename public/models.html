@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pick your Tello: free chat, Green Tello and Gold Tello</title>
+  <link rel="icon" href="/brand/tello-mark.svg" type="image/svg+xml" />
+  <link rel="icon" href="/brand/tello-icon-32.png" sizes="32x32" type="image/png" />
+  <link rel="apple-touch-icon" href="/brand/tello-apple-touch-180.png" />
+  <meta name="description" content="Pick your Tello. The Tello chat on your website is free, with a greeting and a daily briefing about your business. Green Tello, your private assistant, is $19 a month after 7 days free. Gold Tello, $49 a month, is coming soon." />
+  <link rel="canonical" href="https://tello.live/models" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Tello" />
+  <meta property="og:title" content="Pick your Tello" />
+  <meta property="og:description" content="Free Tello chat for your website. Green Tello, your private assistant, is $19 a month after 7 days free. Gold Tello is coming soon." />
+  <meta property="og:url" content="https://tello.live/models" />
+  <meta property="og:image" content="https://tello.live/brand/tello-og-1200x630.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin /><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --bg: #faf8f4; --text: #16181b; --muted: #5d636a; --line: #e4dfd6; --gold: #ffd23f; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; }
+    a { color: #7a5800; }
+    :focus-visible { outline: 2px solid #b88700; outline-offset: 2px; }
+    .wrap { max-width: 1040px; margin: 0 auto; padding: 0 16px; }
+    header { padding: 1.1rem 0; border-bottom: 1px solid var(--line); }
+    header .wrap { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+    .brand { font-weight: 800; text-decoration: none; font-size: 1.15rem; color: var(--text); }
+    .brand span { color: #8a6a00; }
+    .nav a { color: var(--muted); text-decoration: none; font-size: .92rem; margin-left: 1.1rem; }
+    .nav a.ask { color: var(--text); font-weight: 700; }
+    .top { text-align: center; padding: 2.4rem 0 1.4rem; }
+    h1 { font-size: clamp(2rem, 6vw, 3rem); letter-spacing: -.03em; line-height: 1.05; }
+    .top p { color: var(--muted); margin-top: .5rem; font-size: 1.05rem; }
+    .ts-slide.model { flex-basis: min(90%, 440px); min-height: 520px; padding: 1.6rem 1.4rem; }
+    .model .mark { width: 72px; height: 72px; display: block; }
+    .model .row { display: flex; align-items: center; justify-content: space-between; gap: .6rem; }
+    .model h2 { font-size: 1.7rem; letter-spacing: -.02em; }
+    .model .what { font-size: 1.05rem; color: var(--text); font-weight: 600; }
+    .badge { font-size: .78rem; font-weight: 700; border-radius: 999px; padding: .25rem .7rem; }
+    .badge.live { background: #dcf7eb; color: #11613f; } .badge.soon { background: #fff; border: 1px solid var(--line); color: var(--muted); }
+    .model ul { list-style: none; display: flex; flex-direction: column; gap: .45rem; margin: .4rem 0; }
+    .model ul[hidden] { display: none; }
+    .model li { padding-left: 1.5rem; position: relative; color: var(--text); }
+    .model li::before { content: ""; position: absolute; left: 0; top: .45em; width: .75rem; height: .75rem; border-radius: 50%; background: currentColor; opacity: .25; }
+    .ts-slide.gold { background: linear-gradient(165deg, #fff3c4, #fff 55%); border-color: #f1d77a; }
+    .gold li::before { background: #c79a00; opacity: 1; }
+    .ts-slide.free { background: linear-gradient(165deg, #e6eefc, #fff 55%); border-color: #bccdf0; }
+    .free li::before { background: #3566c9; opacity: 1; }
+    .ts-slide.green { background: linear-gradient(165deg, #d6f5e7, #fff 55%); border-color: #9fe0c3; }
+    .green li::before { background: #1fa070; opacity: 1; }
+    .ts-slide.app { background: #16181b; color: #f6f1e6; border-color: #16181b; } .app .what, .app li { color: #f6f1e6; } .app li::before { background: #ffd23f; opacity: 1; } .app .sub { color: #c9c1b0; }
+    .plans { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: .3rem; margin-top: .3rem; }
+    .plans button { font: inherit; border: 0; background: transparent; border-radius: 10px; padding: .55rem .4rem; cursor: pointer; color: var(--muted); font-weight: 600; min-height: 44px; }
+    .plans button[aria-pressed="true"] { background: var(--text); color: #fff; }
+    .plans b { display: block; font-size: 1.05rem; }
+    .cta { margin-top: auto; display: inline-flex; align-items: center; justify-content: center; min-height: 48px; border-radius: 999px; padding: .7rem 1.3rem; font-weight: 700; text-decoration: none; background: var(--gold); color: #1a1400; }
+    .cta.outline { background: #fff; border: 1.5px solid #1fa070; color: #11613f; }
+    .cta.light { background: #ffd23f; }
+    .sub { color: var(--muted); font-size: .88rem; text-align: center; }
+    .compare { margin: 2rem auto 0; max-width: 760px; border-collapse: collapse; width: 100%; font-size: .95rem; }
+    .compare th, .compare td { text-align: left; padding: .7rem .6rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+    .compare thead th { font-size: .8rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+    .scroll { overflow-x: auto; }
+    footer { border-top: 1px solid var(--line); padding: 1.5rem 0 2rem; color: var(--muted); font-size: .85rem; margin-top: 3rem; }
+    @media (min-width: 900px) { .ts-slide.model { flex-basis: calc((100% - 28px) / 3); } }
+  </style>
+  <script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Tello", "item": "https://tello.live/"}, {"@type": "ListItem", "position": 2, "name": "Pick your Tello", "item": "https://tello.live/models"}]}]}</script>
+</head>
+<body>
+  <header><div class="wrap"><a class="brand" href="/"><img src="/brand/tello-mark.svg" width="38" height="38" alt="" style="vertical-align:-11px;margin-right:9px" />tello<span>.live</span></a><nav class="nav"><a class="ask" href="/">Ask Tello</a><a href="/">Business</a></nav></div></header>
+  <main>
+    <section class="wrap top">
+      <h1>Pick your Tello</h1>
+      <p>Each Tello does one job well.</p>
+    </section>
+    <section class="wrap">
+      <div class="ts-deck" aria-label="Tello models">
+        <div class="ts-track">
+          <article class="ts-slide model free" id="free">
+            <div class="row"><img class="mark" src="/brand/tello-mark.svg" width="72" height="72" alt="" /><span class="badge live">Available now</span></div>
+            <h2>Tello chat</h2>
+            <p class="what">Answers your customers on your website, day and night.</p>
+            <p class="what" style="font-weight:700">Free, no card needed</p>
+            <ul>
+              <li>A chat bubble on your site, plus your own Tello link</li>
+              <li>An opening greeting in your business's name</li>
+              <li>A daily briefing about your business: who is waiting for a reply</li>
+              <li>Every lead emailed to you</li>
+            </ul>
+            <a class="cta" href="/business#setup">Start free</a>
+            <p class="sub">No card needed. Up to 50 customer messages a day.</p>
+          </article>
+          <article class="ts-slide model green" id="green">
+            <div class="row"><img class="mark" src="/brand/tello-mark.svg" width="72" height="72" alt="" /><span class="badge live">Available now</span></div>
+            <h2>Green Tello</h2>
+            <p class="what">Your private assistant, inside your business. It knows your private details and works for you.</p>
+            <p class="what" style="font-weight:700">$19 a month after 7 days free</p>
+            <ul>
+              <li>Everything in the free Tello chat, with up to 300 customer messages a day</li>
+              <li>Knows your private notes and every open lead</li>
+              <li>Drafts replies in your voice</li>
+              <li>Emails a lead or marks it done only after you tap Confirm</li>
+            </ul>
+            <a class="cta outline" href="/business#setup">Set up my Tello</a>
+            <p class="sub">Start it from your private page. A card is needed to start, and you can cancel any time. Landlords get Green Tello included in any EC Rental plan (from $29 a month), with their rentals, renters and rent. <a href="https://ecrentalpm.com" target="_blank" rel="noopener">Open EC Rental</a></p>
+          </article>
+          <article class="ts-slide model gold" id="gold">
+            <div class="row"><img class="mark" src="/brand/tello-mark.svg" width="72" height="72" alt="" /><span class="badge soon">Coming soon</span></div>
+            <h2>Gold Tello</h2>
+            <p class="what">For owners with more than one business, or a team.</p>
+            <p class="what" style="font-weight:700">$49 a month</p>
+            <ul>
+              <li>Everything in Green Tello</li>
+              <li>One morning briefing across all your businesses</li>
+              <li>Team seats with roles, including read-only</li>
+              <li>Your daily briefing read aloud</li>
+              <li>Priority support</li>
+            </ul>
+            <a class="cta" href="mailto:support@tello.live?subject=Gold%20Tello%3A%20tell%20me%20when%20it%27s%20ready">Email me when it's ready</a>
+            <p class="sub">Not available yet. This opens your email app.</p>
+          </article>
+        </div>
+      </div>
+      <div class="scroll">
+        <table class="compare">
+          <thead><tr><th scope="col"></th><th scope="col">Tello chat</th><th scope="col">Green Tello</th><th scope="col">Gold Tello</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Price</th><td>Free, no card needed</td><td>$19 a month after 7 days free (card needed)</td><td>$49 a month, coming soon</td></tr>
+            <tr><th scope="row">Customer messages a day</th><td>Up to 50</td><td>Up to 300</td><td>Coming soon</td></tr>
+            <tr><th scope="row">Opening greeting</th><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row">Daily briefing about your business</th><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row">Works on</th><td>Your website and your Tello link</td><td>Inside your business (landlords: included in EC Rental plans, from $29 a month)</td><td>All your businesses</td></tr>
+            <tr><th scope="row">Knows</th><td>Your public information and your leads</td><td>Your private details too</td><td>Your private details, across businesses</td></tr>
+            <tr><th scope="row">Does</th><td>Answers customers, emails you every lead</td><td>Drafts and sends replies, only after you confirm</td><td>Same as Green, plus team seats, a voice briefing and priority support</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+  <footer><div class="wrap">tello.live &middot; <a href="/privacy">Privacy</a> &middot; <a href="/terms">Terms</a> &middot; Tello is an AI and can be wrong, and is not for health care. Questions? <a href="mailto:support@tello.live">support@tello.live</a></div></footer>
+  <script>
+  (function () {
+    var btns = document.querySelectorAll('.plans button');
+    [].forEach.call(btns, function (b) {
+      b.addEventListener('click', function () {
+        [].forEach.call(btns, function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+        [].forEach.call(document.querySelectorAll('#gold ul[data-for]'), function (u) { u.hidden = u.getAttribute('data-for') !== b.getAttribute('data-plan'); });
+      });
+    });
+  })();
+  </script>
+  <script src="/js/tello-slides.js" defer></script>
+  <script src="/js/tello-hub-widget.js" defer></script>
+  <script src="/js/tello-menu.js" defer></script>
+</body>
+</html>

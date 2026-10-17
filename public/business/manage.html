@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <title>Manage your Tello | tello.live</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin /><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --ink: #0b1f19; --deep: #123a30; --gold: #e8a23d; --text: #e9efe9; --muted: #a9bdb3; --line: rgba(255,255,255,0.1); }
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--ink); color: var(--text); line-height: 1.5; }
+    a { color: var(--gold); }
+    .wrap { max-width: 1040px; margin: 0 auto; padding: 0 16px; }
+    header { padding: 1.1rem 0; border-bottom: 1px solid var(--line); }
+    header .wrap { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+    .brand { font-weight: 800; letter-spacing: 0.02em; text-decoration: none; font-size: 1.15rem; color: var(--text); }
+    .brand span { color: var(--gold); }
+    .nav a { color: var(--muted); text-decoration: none; font-size: 0.92rem; margin-left: 1.1rem; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; background: var(--gold); color: var(--ink); font: inherit; font-weight: 700; text-decoration: none; border: 0; border-radius: 999px; padding: 0.8rem 1.35rem; cursor: pointer; }
+    .btn:hover { filter: brightness(1.07); } .btn:disabled { opacity: .55; cursor: default; }
+    .btn.ghost { background: transparent; color: var(--text); border: 1.5px solid rgba(255,255,255,0.3); }
+    .btn.small { padding: 0.5rem 1rem; font-size: 0.88rem; }
+    h1 { font-size: clamp(2rem, 5vw, 3rem); line-height: 1.08; letter-spacing: -0.02em; margin: 0.6rem 0 1rem; }
+    h2 { font-size: clamp(1.4rem, 3vw, 1.9rem); letter-spacing: -0.01em; margin-bottom: 0.4rem; }
+    .kick { color: var(--gold); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; font-size: 0.8rem; }
+    .lede { color: var(--muted); font-size: 1.08rem; max-width: 520px; }
+    .card { background: rgba(255,255,255,0.04); border: 1px solid var(--line); border-radius: 16px; padding: 1.4rem; }
+    label { display: flex; flex-direction: column; gap: 0.3rem; font-weight: 600; font-size: 0.85rem; margin-bottom: 0.8rem; }
+    input, textarea { font: inherit; font-weight: 400; font-size: 1rem; padding: 0.65rem 0.75rem; border-radius: 10px; border: 1px solid rgba(255,255,255,0.25); background: rgba(0,0,0,0.35); color: var(--text); width: 100%; }
+    textarea { min-height: 110px; resize: vertical; }
+    input:focus, textarea:focus, .btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
+    .hp { position: absolute; left: -9999px; }
+    .note-ok { background: rgba(31,160,112,.15); border: 1px solid rgba(31,160,112,.4); border-radius: 12px; padding: .7rem 1rem; margin: 0 0 1rem; font-size: .95rem; }
+    .err { color: #ff9b8a; font-size: 0.92rem; margin: 0.4rem 0; min-height: 1.2em; }
+    .ok { color: #8fe3b0; }
+    .small-note { color: var(--muted); font-size: 0.85rem; margin-top: 0.6rem; }
+    code, pre { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.85rem; }
+    pre { background: rgba(0,0,0,0.45); border: 1px solid var(--line); border-radius: 10px; padding: 0.75rem; white-space: pre-wrap; word-break: break-all; margin: 0.4rem 0 0.6rem; }
+    footer { border-top: 1px solid var(--line); padding: 1.5rem 0 2rem; color: var(--muted); font-size: 0.85rem; margin-top: 3rem; }
+
+    main { padding: 2rem 0; display: grid; gap: 1.2rem; }
+    .card h2 { font-size: 1.2rem; margin-bottom: .5rem; }
+    .row { display: flex; gap: .6rem; flex-wrap: wrap; align-items: center; margin-top: .6rem; }
+    .badge { display: inline-block; font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: .15rem .6rem; border-radius: 999px; background: var(--deep); color: var(--gold); }
+    .lead { border-top: 1px solid var(--line); padding: .8rem 0; } .lead:first-child { border-top: 0; }
+    .lead b { color: var(--text); } .lead small { color: var(--muted); display: block; }
+    .lead pre { font-size: .8rem; color: var(--muted); }
+    .copy-row { display: flex; gap: .5rem; align-items: stretch; } .copy-row pre { flex: 1; margin: 0; }
+  </style>
+</head>
+<body>
+  <header><div class="wrap"><a class="brand" href="/">tello<span>.live</span></a><span class="small-note" style="margin:0">Private page. Do not share this link.</span></div></header>
+  <main class="wrap" id="app"><p class="small-note">Loading...</p></main>
+  <script src="/vendor/qrcode-generator/qrcode.js"></script>
+  <script src="/js/tello-share.js"></script>
+  <script>
+  (function () {
+    var qs = new URLSearchParams(location.search), app = document.getElementById('app'), tok = qs.get('t') || '', cs = qs.get('cs') || '', billing = qs.get('billing') || '', tries = 0, data = null;
+    function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+    function api(path, method, body) {
+      return fetch('/api/biz/manage' + path + (method === 'GET' ? '?t=' + encodeURIComponent(tok) + (path === '' && /^cs_/.test(cs) ? '&cs=' + encodeURIComponent(cs) : '') : ''), { method: method, headers: { 'Content-Type': 'application/json' }, body: method === 'GET' ? undefined : JSON.stringify(Object.assign({ t: tok }, body || {})) })
+        .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok) throw new Error(j.error || 'Something went wrong.'); return j; }); });
+    }
+    function field(label, node) { var l = el('label', '', label); l.appendChild(node); return l; }
+    function copyBox(text) {
+      var row = el('div', 'copy-row'), pre = el('pre', '', text), b = el('button', 'btn small ghost', 'Copy'); b.type = 'button';
+      b.addEventListener('click', function () { (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(function () { b.textContent = 'Copied'; }, function () { b.textContent = 'Select and copy'; }); });
+      row.appendChild(pre); row.appendChild(b); return row;
+    }
+    function fmt(d) { try { return new Date(d).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' }); } catch (e) { return d; } }
+    var gMsgs = [];
+    function greenCard(d) {
+      var card = el('section', 'card'); card.appendChild(el('h2', '', 'Green Tello'));
+      var note = el('p', 'err', '');
+      var used = Math.min(d.used_today || 0, d.cap), left = d.cap - used;
+      var line = el('p', 'small-note', 'Customer messages today: ' + used + ' of ' + d.cap + (d.green_on ? '.' : ' on the free plan. Green Tello raises it to ' + d.cap_green + ' a day.'));
+      if (!d.green_on && (left <= 0 || d.trial_over)) { line.className = 'err'; line.textContent = (left <= 0 ? 'Today\'s free limit of ' + d.cap + ' customer messages is used up, so visitors are asked to contact you directly until tomorrow. ' : 'Your 7 free days are over. Your website chat keeps working on the free plan (' + d.cap + ' customer messages a day). ') + 'Start Green Tello to raise it to ' + d.cap_green + ' a day and get your private assistant.'; }
+      card.appendChild(line);
+      if (!d.green_on) {
+        card.appendChild(el('p', 'small-note', 'Your private assistant for ' + d.business + '. It knows your business notes and every lead, drafts replies in your voice, emails a lead or marks it done only after you tap Confirm, and adds new facts to your notes.'));
+        card.appendChild(el('p', 'small-note', '$' + d.price + ' a month after 7 days free. A card is needed to start, and you can cancel any time on this page.'));
+        if (d.billing_on) {
+          var st = el('button', 'btn small', 'Start Green Tello, 7 days free'); st.type = 'button';
+          st.addEventListener('click', function () { st.disabled = true; api('/checkout', 'POST', { plan: 'starter' }).then(function (j) { if (j.url) location.href = j.url; else load(); }).catch(function (e) { st.disabled = false; note.textContent = e.message; }); });
+          card.appendChild(st);
+        }
+        card.appendChild(note); return card;
+      }
+      card.appendChild(el('p', 'small-note', 'Ask about your leads, or tell me what to do. I never send or change anything until you tap Confirm.'));
+      var log = el('div'); log.style.cssText = 'display:grid;gap:.6rem;margin:.6rem 0';
+      function bubble(who, text) { var x = el('div', '', text); x.style.cssText = 'white-space:pre-wrap;padding:.6rem .8rem;border-radius:12px;max-width:92%;' + (who === 'me' ? 'justify-self:end;background:var(--deep);color:var(--gold)' : 'justify-self:start;border:1px solid var(--line)'); log.appendChild(x); return x; }
+      function actionCard(a, m) {
+        var box = el('div'); box.style.cssText = 'border:1px solid var(--line);border-radius:12px;padding:.7rem .8rem';
+        box.appendChild(el('b', '', a.label));
+        if (a.type === 'email_lead') { box.appendChild(el('p', 'small-note', 'Subject: ' + a.subject)); var pre = el('pre', '', a.body); pre.style.whiteSpace = 'pre-wrap'; box.appendChild(pre); }
+        if (a.type === 'add_note') box.appendChild(el('p', 'small-note', a.text));
+        var r = el('div', 'row'), ok = el('button', 'btn small', a.type === 'email_lead' ? 'Confirm and send' : 'Confirm'), no = el('button', 'btn small ghost', 'Cancel');
+        ok.type = 'button'; no.type = 'button';
+        ok.addEventListener('click', function () { ok.disabled = no.disabled = true; api('/tello-confirm', 'POST', { action: a }).then(function (j) { m.action = null; gMsgs.push({ who: 'tello', text: j.message || 'Done.' }); load(); }).catch(function (e) { ok.disabled = no.disabled = false; note.textContent = e.message; }); });
+        no.addEventListener('click', function () { m.action = null; box.remove(); });
+        r.appendChild(ok); r.appendChild(no); box.appendChild(r); log.appendChild(box);
+      }
+      gMsgs.forEach(function (m) { if (m.action) { bubble('tello', m.text); actionCard(m.action, m); } else bubble(m.who, m.text); });
+      card.appendChild(log);
+      var form = el('form', 'row'), ta = el('input'); ta.type = 'text'; ta.maxLength = 1500; ta.placeholder = 'Ask Tello, for example: who is waiting for a reply?'; ta.style.flex = '1'; ta.setAttribute('aria-label', 'Ask Tello');
+      var sendB = el('button', 'btn small', 'Send'); sendB.type = 'submit';
+      form.appendChild(ta); form.appendChild(sendB);
+      function ask(text) {
+        text = (text || '').trim(); if (!text) return;
+        var hist = gMsgs.map(function (m) { return { role: m.who === 'me' ? 'user' : 'assistant', content: m.text }; });
+        gMsgs.push({ who: 'me', text: text }); bubble('me', text); ta.value = ''; sendB.disabled = true; note.textContent = '';
+        var wait = bubble('tello', 'Thinking...');
+        api('/tello', 'POST', { message: text, history: hist }).then(function (j) {
+          wait.remove(); sendB.disabled = false;
+          var tm = { who: 'tello', text: j.reply, action: j.action || null }; gMsgs.push(tm); bubble('tello', j.reply); if (j.action) actionCard(j.action, tm);
+        }).catch(function (e) { wait.remove(); sendB.disabled = false; note.textContent = e.message; });
+      }
+      form.addEventListener('submit', function (e) { e.preventDefault(); ask(ta.value); });
+      var qp = el('div', 'row');
+      ['Who is waiting for a reply?', 'What should I do today?', 'Draft a reply to my newest lead'].forEach(function (q) { var x = el('button', 'btn small ghost', q); x.type = 'button'; x.addEventListener('click', function () { ask(q); }); qp.appendChild(x); });
+      card.appendChild(form); card.appendChild(qp); card.appendChild(note); return card;
+    }
+    var offerShown = false;
+    function greenOffer(d) {
+      if (offerShown || d.green_on || !d.billing_on) return; offerShown = true;
+      var back = el('div'); back.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px;z-index:50';
+      var box = el('div'); box.setAttribute('role', 'dialog'); box.setAttribute('aria-modal', 'true'); box.setAttribute('aria-label', 'Green Tello');
+      box.style.cssText = 'background:var(--paper,#fff);color:inherit;border-radius:16px;max-width:420px;width:100%;padding:1.2rem 1.3rem;box-shadow:0 20px 60px rgba(0,0,0,.35)';
+      box.appendChild(el('h2', '', 'Meet Green Tello'));
+      box.appendChild(el('p', 'small-note', 'Your chat, opening greeting and daily briefing are free. Green Tello is your private assistant: it knows your private notes and sees every lead, drafts replies in your voice, and emails a lead or marks it done only after you tap Confirm.'));
+      box.appendChild(el('p', 'small-note', '$' + d.price + ' a month after 7 days free. Cancel any time.'));
+      var r = el('div', 'row'), go = el('button', 'btn', 'Start 7 days free'), no = el('button', 'btn ghost', 'Not now'), err = el('p', 'err', '');
+      go.type = 'button'; no.type = 'button';
+      function close() { back.remove(); document.removeEventListener('keydown', esc); }
+      function esc(e) { if (e.key === 'Escape') close(); }
+      document.addEventListener('keydown', esc);
+      go.addEventListener('click', function () { go.disabled = true; api('/checkout', 'POST', { plan: 'starter' }).then(function (j) { if (j.url) location.href = j.url; else { close(); load(); } }).catch(function (e) { go.disabled = false; err.textContent = e.message; }); });
+      no.addEventListener('click', close);
+      r.appendChild(go); r.appendChild(no); box.appendChild(r); box.appendChild(err); back.appendChild(box); document.body.appendChild(back); go.focus();
+    }
+    function render() {
+      app.textContent = '';
+      setTimeout(function () { greenOffer(data); }, 1200);
+      var d = data, msg = el('p', 'err', ''); msg.id = 'msg';
+      app.appendChild(greenCard(d));
+      var today = el('section', 'card'); today.appendChild(el('h2', '', 'Today with Tello'));
+      var tBody = el('div'); tBody.appendChild(el('p', 'small-note', 'Loading...')); today.appendChild(tBody); app.appendChild(today);
+      api('/today', 'GET').then(function (t) {
+        tBody.textContent = '';
+        t.items.forEach(function (x) { var p0 = el('p', '', x); p0.style.marginBottom = '.4rem'; tBody.appendChild(p0); });
+        var canSpeak = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window, tr = el('div', 'row');
+        if (canSpeak) {
+          var sp = el('button', 'btn small', 'Read it to me'); sp.type = 'button'; var speaking = false;
+          sp.addEventListener('click', function () { if (speaking) { speechSynthesis.cancel(); speaking = false; sp.textContent = 'Read it to me'; return; } var u = new SpeechSynthesisUtterance(t.speech); u.lang = 'en-US'; u.onend = u.onerror = function () { speaking = false; sp.textContent = 'Read it to me'; }; speaking = true; sp.textContent = 'Stop'; speechSynthesis.cancel(); speechSynthesis.speak(u); });
+          tr.appendChild(sp);
+        }
+        tBody.appendChild(tr);
+        if (t.open.length) { var h = el('p', 'small-note', 'Waiting for a reply'); h.style.marginTop = '1rem'; tBody.appendChild(h); }
+        t.open.forEach(function (o) {
+          var x = el('div', 'lead'); x.appendChild(el('b', '', o.contact)); x.appendChild(el('small', '', (o.name ? o.name + ' - ' : '') + fmt(o.created_at) + (o.waiting ? ' - waiting more than a day' : '')));
+          x.appendChild(el('pre', '', o.snippet));
+          var dn = el('button', 'btn small ghost', 'Mark done'); dn.type = 'button';
+          dn.addEventListener('click', function () { dn.disabled = true; api('/lead-done', 'POST', { id: o.id }).then(load).catch(function () { dn.disabled = false; }); });
+          x.appendChild(dn); tBody.appendChild(x);
+        });
+      }).catch(function () { tBody.textContent = ''; tBody.appendChild(el('p', 'small-note', 'I could not load today just now.')); });
+      var plan = el('section', 'card'); plan.appendChild(el('h2', '', d.business));
+      var isPro = d.plan === 'pro', myPrice = isPro ? d.pro_price : d.price;
+      var b = el('span', 'badge', d.subscribed ? (d.cancel_at_period_end ? 'Ends ' + fmt(d.period_end) : (isPro ? 'Pro' : 'Green Tello')) : 'Free chat'); plan.appendChild(b);
+      var p = el('p', 'small-note', d.subscribed ? (d.cancel_at_period_end ? 'Your plan is cancelled and stays on until ' + fmt(d.period_end) + '. You will not be charged again.' : 'Your ' + (isPro ? 'Tello Pro' : 'Green Tello') + ' is on. $' + myPrice + ' a month' + (d.period_end ? ', next charge ' + fmt(d.period_end) : '') + '.') : 'Your website chat, chat link, opening greeting and daily briefing are free, with no card needed. Green Tello, your private assistant, is $' + d.price + ' a month after 7 days free.');
+      plan.appendChild(p);
+      if (d.status === 'past_due') plan.appendChild(el('p', 'err', 'Your last payment did not go through. Tap Manage billing to update your card.'));
+      var row = el('div', 'row');
+      function go(label, path, body, ghost) { var x = el('button', 'btn small' + (ghost ? ' ghost' : ''), label); x.type = 'button'; x.addEventListener('click', function () { x.disabled = true; api(path, 'POST', body).then(function (j) { if (j.url) location.href = j.url; else load(); }).catch(function (e) { x.disabled = false; msg.textContent = e.message; }); }); row.appendChild(x); }
+      if (d.subscribed && !d.cancel_at_period_end) { if (isPro) go('Switch to Green Tello ($' + d.price + '/month)', '/upgrade', { plan: 'starter' }, true); }
+      if (d.subscribed) go('Manage billing', '/portal', {}, true);
+      if (d.subscribed) { var c = el('button', 'btn ghost small', d.cancel_at_period_end ? 'Keep my plan' : 'Cancel plan'); c.type = 'button'; c.addEventListener('click', function () { c.disabled = true; api(d.cancel_at_period_end ? '/resume' : '/cancel', 'POST').then(load).catch(function (e) { c.disabled = false; msg.textContent = e.message; }); }); row.appendChild(c); }
+      plan.appendChild(row); plan.appendChild(msg); app.appendChild(plan);
+
+      if (!d.site_url) {
+        var ow = el('section', 'card'); ow.appendChild(el('h2', '', 'No website yet?'));
+        ow.appendChild(el('p', 'small-note', 'Build one right here on tello.live with our website builder (powered by OwnSite). A small site fits in its free monthly allowance; bigger sites can need a token pack, and it shows the cost before building. It starts from your notes, and your Tello chat is on every page. You download your site and put it online, so it stays yours. Then add its link below and press Read my website.'));
+        var ob = el('a', 'btn small', 'Build my website'); 
+        ob.href = '/build?' + new URLSearchParams({ from: 'tello', tello: d.id, business: String(d.business || '').slice(0, 80), about: String(d.extra || d.facts || '').slice(0, 1200) }).toString();
+        ow.appendChild(ob); app.appendChild(ow);
+      }
+      var link = el('section', 'card'); link.appendChild(el('h2', '', 'Share your chat link'));
+      link.appendChild(el('p', 'small-note', 'The quickest way to start: put this link in your Google Business profile, Instagram or Facebook bio, emails and text replies. No website needed.'));
+      link.appendChild(copyBox(d.chat_url));
+      if (window.TelloShare) link.appendChild(TelloShare.qr(d.chat_url));
+      var tr = el('a', 'btn small ghost', 'Open my chat'); tr.href = d.chat_url; tr.target = '_blank'; tr.rel = 'noopener'; link.appendChild(tr); app.appendChild(link);
+      var share = el('section', 'card'); share.appendChild(el('h2', '', 'Put Tello on your website'));
+      share.appendChild(el('p', 'small-note', 'Paste this line before the closing </body> tag of your website. A chat button appears in the corner.'));
+      share.appendChild(copyBox(d.embed));
+      var how = el('a', '', 'Step by step for WordPress, Wix, Squarespace, Shopify and more'); how.href = '/install?id=' + d.id; how.target = '_blank'; how.rel = 'noopener';
+      var howP = el('p', 'small-note'); howP.appendChild(how); share.appendChild(howP);
+      share.appendChild(el('p', 'small-note', 'Someone else builds your website? Email them the line and the steps:'));
+      if (window.TelloShare) share.appendChild(TelloShare.emailForm(tok));
+      app.appendChild(share);
+
+      var teach = el('section', 'card'); teach.appendChild(el('h2', '', 'What Tello knows'));
+      teach.appendChild(el('p', 'small-note', 'Tello answers only from these notes. Fix anything that is wrong and add what customers ask about: prices, hours, service area, how to book.'));
+      var tf = el('textarea'); tf.value = d.facts; tf.maxLength = 4000; tf.style.minHeight = '240px';
+      var te = el('textarea'); te.value = d.extra; te.maxLength = 1200; te.placeholder = 'Anything else Tello should tell customers';
+      var tg = el('input'); tg.value = d.greeting; tg.maxLength = 160;
+      var tn = el('input'); tn.value = d.business; tn.maxLength = 80;
+      var ts = el('input'); ts.value = d.site_url || ''; ts.maxLength = 300; ts.placeholder = 'https://yourbusiness.com'; ts.inputMode = 'url';
+      teach.appendChild(field('Business name', tn)); teach.appendChild(field('Website link (after adding or changing it, press Read my website)', ts)); teach.appendChild(field('Notes from your website', tf)); teach.appendChild(field('Extra notes from you', te)); teach.appendChild(field('Greeting', tg));
+      var r2 = el('div', 'row'), save = el('button', 'btn small', 'Save'), ref = el('button', 'btn small ghost', d.site_url ? 'Re-read my website' : 'Read my website'); save.type = ref.type = 'button';
+      var m2 = el('p', 'small-note', '');
+      save.addEventListener('click', function () { save.disabled = true; api('', 'PUT', { business: tn.value, facts: tf.value, extra: te.value, greeting: tg.value }).then(function () { d.business = tn.value; d.facts = tf.value; d.extra = te.value; d.greeting = tg.value; m2.textContent = 'Saved.'; m2.className = 'small-note ok'; save.disabled = false; }).catch(function (e) { m2.textContent = e.message; m2.className = 'err'; save.disabled = false; }); });
+      ref.addEventListener('click', function () { ref.disabled = true; m2.textContent = 'Reading your website...'; m2.className = 'small-note'; if (!ts.value.trim()) { m2.textContent = 'Type your website link first.'; m2.className = 'err'; ref.disabled = false; return; } api('/refresh', 'POST', { site_url: ts.value.trim() }).then(function (j) { tf.value = j.facts; d.site_url = ts.value.trim(); m2.textContent = 'Updated from your website. Review it, then press Save if you changed anything.'; ref.disabled = false; }).catch(function (e) { m2.textContent = e.message; m2.className = 'err'; ref.disabled = false; }); });
+      r2.appendChild(save); r2.appendChild(ref); teach.appendChild(r2); teach.appendChild(m2); app.appendChild(teach);
+
+      var pc = el('section', 'card'); pc.appendChild(el('h2', '', 'Your Tello meet page'));
+      if (!d.pro_on) { pc.appendChild(el('p', 'small-note', 'The private meet page, suggested questions and a way for customers to message your team were part of the older Pro plan, which is no longer sold. Your free chat link and website chat work now.')); }
+      else {
+        pc.appendChild(el('p', 'small-note', 'Share this link by text, email, a QR code or your social profile. It opens a short introduction to Tello for your business, then the chat.'));
+        pc.appendChild(copyBox(d.meet_url));
+        var mo = el('a', 'btn small ghost', 'Open my meet page'); mo.href = d.meet_url; mo.target = '_blank'; mo.rel = 'noopener'; pc.appendChild(mo);
+        var ps = d.pro_settings || {};
+        function area(v, ph, max) { var x = el('textarea'); x.value = v; x.placeholder = ph; x.maxLength = max; x.style.minHeight = '90px'; return x; }
+        var pa = area((ps.audience || []).join('\n'), 'One per line, up to 5. Example: Homeowners in Fresno', 400), pq = area((ps.suggestions || []).join('\n'), 'One question per line, up to 6. Example: Do you offer free quotes?', 700);
+        var pe = el('input'); pe.value = ps.example_q || ''; pe.maxLength = 120; pe.placeholder = 'Example question a customer might ask';
+        var pn = el('textarea'); pn.value = ps.example_a || ''; pn.maxLength = 280; pn.placeholder = 'How Tello should answer it (use facts you know are true)'; pn.style.minHeight = '70px';
+        var pt = el('input'); pt.value = ps.cta || ''; pt.maxLength = 120; pt.placeholder = 'Example: Ask for your free quote any time.';
+        var up = el('input'); up.type = 'checkbox'; up.checked = !!ps.uploads; up.style.cssText = 'width:auto;margin-right:.5rem';
+        var upl = el('label', ''); upl.style.cssText = 'flex-direction:row;align-items:center;font-weight:600'; upl.appendChild(up); upl.appendChild(document.createTextNode('Let customers attach a photo when they message my team'));
+        var upn = el('p', 'small-note', 'Off by default. Photos are private: only you can open them from this page. Do not turn this on for health care or medical businesses, or if customers might send IDs or personal documents.'); pc.appendChild(field('Suggested questions (shown as buttons in the chat)', pq)); pc.appendChild(field('Example conversation: question', pe)); pc.appendChild(field('Example conversation: answer', pn)); pc.appendChild(field('Closing line on the last slide', pt)); pc.appendChild(upl); pc.appendChild(upn);
+        var r3 = el('div', 'row'), sv = el('button', 'btn small', 'Save meet page'); sv.type = 'button'; var m3 = el('p', 'small-note', '');
+        sv.addEventListener('click', function () { sv.disabled = true; var lines = function (t) { return t.split('\n').map(function (x) { return x.trim(); }).filter(Boolean); };
+          api('', 'PUT', { business: d.business, facts: d.facts, extra: d.extra, greeting: d.greeting, pro: { uploads: up.checked, audience: lines(pa.value), suggestions: lines(pq.value), example_q: pe.value, example_a: pn.value, cta: pt.value } })
+            .then(function () { m3.textContent = 'Saved.'; m3.className = 'small-note ok'; sv.disabled = false; }).catch(function (e) { m3.textContent = e.message; m3.className = 'err'; sv.disabled = false; }); });
+        r3.appendChild(sv); pc.appendChild(r3); pc.appendChild(m3);
+      }
+      app.appendChild(pc);
+
+      var leads = el('section', 'card'); leads.appendChild(el('h2', '', 'Customer messages and leads'));
+      if (!d.leads.length) leads.appendChild(el('p', 'small-note', 'No one has left their details yet. When a customer gives a phone number or email in the chat, it shows here and is emailed to you.'));
+      d.leads.forEach(function (l) { var x = el('div', 'lead'); var bb = el('b', '', l.contact); x.appendChild(bb); x.appendChild(el('small', '', (l.name ? l.name + ' - ' : '') + fmt(l.created_at))); x.appendChild(el('pre', '', l.message)); if (l.file_id) { var pl = el('a', 'btn small ghost', 'View photo'); pl.href = '/api/biz/manage/file/' + l.file_id + '?t=' + encodeURIComponent(tok); pl.target = '_blank'; pl.rel = 'noopener'; x.appendChild(pl); } leads.appendChild(x); });
+      app.appendChild(leads);
+    }
+    // Back from Stripe: say what happened, wait briefly if the plan is still being confirmed, then tidy the address.
+    function say(text) { var n = el('p', 'note-ok', text); app.insertBefore(n, app.firstChild); }
+    function afterBilling() {
+      if (!billing) return;
+      if (billing === 'canceled') say('No problem, you were not charged. You can start Green Tello any time.');
+      else if (billing === 'success') {
+        if (data.subscribed) say('Green Tello is on. Your 7 days free have started, and your card is not charged until they end.');
+        else if (tries++ < 5) { say('Confirming your payment...'); setTimeout(load, 2500); return; }
+        else say('Your payment is still being confirmed. Please refresh in a minute before trying again.');
+      }
+      billing = ''; cs = '';
+      try { history.replaceState(null, '', '?t=' + encodeURIComponent(tok)); } catch (e) { /* the address stays as it is */ }
+    }
+    function load() {
+      return api('', 'GET').then(function (j) { data = j; try { localStorage.setItem('tello_owner', JSON.stringify({ t: tok, id: j.id, business: String(j.business || '').slice(0, 80) })); } catch (e) {} render(); afterBilling(); }).catch(function (e) { app.textContent = ''; app.appendChild(el('p', 'err', e.message)); var lk = el('p', 'small-note'), a1 = el('a', '', 'Email me my private link'); a1.href = '/business#mylink'; lk.appendChild(a1); lk.appendChild(document.createTextNode(' or ')); var a2 = el('a', '', 'set up a new Tello'); a2.href = '/business#setup'; lk.appendChild(a2); app.appendChild(lk); });
+    }
+    load();
+  })();
+  </script>
+</body>
+</html>

@@ -11,3 +11,7 @@ Do this only after the pages the chat links to are ported. Nothing here has been
 4. Verify tello.live, then delete the Tello code from ec-rental (`tello-hub`, `biz-*`, `business-pages`,
    `video-maker`, hub/business/make pages) in a separate change.
 5. Email: replace the `info@ecrentalpm.com` sender (`EMAIL_FROM`) once tello.live is verified in Resend.
+6. Stripe: the old Worker stored its webhook signing secret in its own D1 (`app_settings`). This Worker creates its own
+   endpoint for `https://tello.live/api/stripe/webhook` on first checkout and deletes any existing endpoint with the
+   same URL, so the old one stops working at that point. Set `STRIPE_SECRET_KEY` as a secret first, and test a checkout
+   with a test-mode key before using the live key.

@@ -11,12 +11,15 @@ Tello only: its own Worker, database, budgets and deploys.
 | --- | --- |
 | Chat front page (`/`, `public/hub.html`, `src/tello-hub.ts`) | Ported |
 | Free video maker API (`src/video-maker.ts`, voice) | Ported (API only) |
-| `/business` page and business assistants (`biz-bots`, `business-pages`, `biz-green`) | Not ported |
-| `/make`, `/videos`, `/meeting`, `/website`, `/social-setup`, `/build`, `/models` and the SEO guides | Not ported |
+| `/business`, hosted chat `/b/<id>`, `/embed/<id>.js`, `/business/manage`, `/install`, `/models` | Ported (`src/biz-bots.ts`, `src/biz-green.ts`, `src/billing.ts`) |
+| Green Tello billing (Stripe checkout, webhook, portal) and the daily briefing cron | Ported, untested against live Stripe |
+| `/build` | Ported (proxies ownsite.app) |
+| Meet Tello page `/m/<id>` (old Pro plan, no longer sold) | Not ported |
+| `/make`, `/videos`, `/meeting`, `/website`, `/social-setup`, tutorial videos, SEO guides, sitemap | Not ported |
 | Own Privacy / Terms | Not written: `/privacy` and `/terms` redirect to ecrentalpm.com |
 | Domain tello.live | Still served by the ec-rental Worker. See `docs/CUTOVER.md` |
 
-The chat links to `/business`, `/make` and other pages that are not here yet, so do not cut the domain over until
+The chat and `/business` link to `/make`, `/videos`, `/meeting` and `/website`, which are not here yet, so do not cut the domain over until
 those are ported (or the links are removed).
 
 ## Develop
