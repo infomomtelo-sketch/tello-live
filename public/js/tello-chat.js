@@ -10,7 +10,7 @@
   if (window.TelloChat) return;
   var API = '/api/public/tello-hub', KEY = 'tello_hub_chat', VOICE_KEY = 'tello_hub_voice2', MAX_KEEP = 30, MAX_TEXT = 4000, MAX_FILES = 3;
   var IMG_MAX_SIDE = 1600, IMG_MAX = 4 * 1024 * 1024, PDF_MAX = 8 * 1024 * 1024, PDF_PAGES = 30;
-  var HOSTS = /^(www\.)?(tello\.live|ecrentalpm\.com|ownsite\.app)$/i;
+  var HOSTS = /^(www\.)?(tello\.live|ecrentalpm\.com|ownsite\.app|title-22\.com)$/i;
   var EXTRA = ''; // a business chat's own website host (one chat per page), also turned into links
   function hostOk(host) { host = String(host || '').toLowerCase(); return HOSTS.test(host) || (!!EXTRA && host.replace(/^www\./, '') === EXTRA); }
   function escRe(t) { return t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
@@ -136,7 +136,7 @@
     try { var u = new URL(url, location.href); if ((u.protocol === 'https:' || u.protocol === 'http:') && hostOk(u.hostname)) return u.href; } catch (e) {}
     return null;
   }
-  var INLINE = /(`[^`\n]+`)|(\*\*[^*\n]+?\*\*)|(\[[^\]\n]+\]\([^)\s]+\))|(https?:\/\/[^\s<>()"]*[^\s<>()".,;:!?'])|(support@tello\.live)|((?:www\.)?(?:tello\.live|ecrentalpm\.com|ownsite\.app)(?:\/[A-Za-z0-9][A-Za-z0-9-]*)*)/gi;
+  var INLINE = /(`[^`\n]+`)|(\*\*[^*\n]+?\*\*)|(\[[^\]\n]+\]\([^)\s]+\))|(https?:\/\/[^\s<>()"]*[^\s<>()".,;:!?'])|(support@tello\.live)|((?:www\.)?(?:tello\.live|ecrentalpm\.com|ownsite\.app|title-22\.com)(?:\/[A-Za-z0-9][A-Za-z0-9-]*)*)/gi;
   function link(parent, text, href, external) {
     var a = h('a', null, text); a.href = href;
     if (external || !/^(https?:\/\/(www\.)?tello\.live|\/|mailto:)/i.test(href)) { a.target = '_blank'; a.rel = 'noopener noreferrer'; }

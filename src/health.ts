@@ -4,4 +4,4 @@ export function looksLikeHealthCare(...texts: string[]): boolean {
   const hits = new Set((texts.join(" ").match(HEALTH_WORDS) || []).map((w) => w.toLowerCase()));
   return hits.size >= 2;
 }
-export const HEALTH_MSG = "Tello is not available for health care or medical businesses. If this is a mistake, email support@tello.live.";
+export const HEALTH_MSG = "The Tello website chat is not available for health care or medical businesses. If you run a California care home, see Title22 at title-22.com. If this is a mistake, email support@tello.live.";
