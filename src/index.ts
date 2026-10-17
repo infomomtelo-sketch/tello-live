@@ -4,6 +4,7 @@
  */
 import { type HubEnv } from "./tello-hub";
 import { handleVideoMaker } from "./video-maker";
+import { handleVideoRequest } from "./video-request";
 import { handleBizBots, handleBotStripeEvent } from "./biz-bots";
 import { handleStripeWebhook, type BillingEnv } from "./billing";
 import { runGreenBriefings } from "./biz-green";
@@ -35,6 +36,24 @@ async function sendEmail(env: Env, to: string, subject: string, html: string, te
   return res.ok;
 }
 
+/** Serves /media/* with Range support (Safari will not play video without it). */
+async function handleMedia(request: Request, env: { ASSETS: Fetcher }, url: URL): Promise<Response | null> {
+  if (!url.pathname.startsWith("/media/") || (request.method !== "GET" && request.method !== "HEAD")) return null;
+  const res = await env.ASSETS.fetch(new Request(url.toString(), { method: "GET" }));
+  if (!res.ok) return res;
+  const type = res.headers.get("Content-Type") || "application/octet-stream";
+  const body = await res.arrayBuffer();
+  const size = body.byteLength;
+  const headers = { "Content-Type": type, "Accept-Ranges": "bytes", "Cache-Control": "public, max-age=86400" };
+  const m = (request.headers.get("Range") || "").match(/^bytes=(\d*)-(\d*)$/);
+  if (!m || (m[1] === "" && m[2] === "")) return new Response(request.method === "HEAD" ? null : body, { headers: { ...headers, "Content-Length": String(size) } });
+  let start: number, end: number;
+  if (m[1] === "") { start = Math.max(0, size - parseInt(m[2])); end = size - 1; }
+  else { start = parseInt(m[1]); end = m[2] === "" ? size - 1 : Math.min(parseInt(m[2]), size - 1); }
+  if (start >= size || start > end) return new Response(null, { status: 416, headers: { "Content-Range": `bytes */${size}` } });
+  return new Response(request.method === "HEAD" ? null : body.slice(start, end + 1), { status: 206, headers: { ...headers, "Content-Range": `bytes ${start}-${end}/${size}`, "Content-Length": String(end - start + 1) } });
+}
+
 // The Terms and Privacy Policy that currently cover tello.live are published by EC Rental Property Management LLC.
 const LEGAL: Record<string, string> = { "/privacy": "https://ecrentalpm.com/privacy", "/terms": "https://ecrentalpm.com/terms" };
 
@@ -47,6 +66,7 @@ export default {
     if (url.hostname === "www.tello.live" && get) { url.hostname = "tello.live"; return Response.redirect(url.toString(), 301); }
     if (get && LEGAL[url.pathname]) return Response.redirect(LEGAL[url.pathname], 302);
     if (get && (url.pathname === "/ask" || url.pathname === "/hub" || url.pathname === "/hub.html")) { url.pathname = "/"; return Response.redirect(url.toString(), 301); }
+    if (url.pathname.startsWith("/media/")) { const m = await handleMedia(request, env, url); if (m) return m; }
     // Business pages: the hosted chat for one business is /b/<id>, served by the same static page for every id.
     if (get && /^\/b\/[a-f0-9]{10}$/.test(url.pathname)) return env.ASSETS.fetch(new Request(new URL("/b", url).toString(), request));
     if (get && url.pathname === "/business.html") { url.pathname = "/business"; return Response.redirect(url.toString(), 301); }
@@ -73,6 +93,8 @@ export default {
         // The hub chat (/api/public/tello-hub/*), business assistants (/api/public/bots*, /api/biz/*) and /embed/<id>.js.
         const biz = await handleBizBots(request, env, url, allow, notify);
         if (biz) return biz;
+        const video = await handleVideoRequest(request, env, url, allow, notify);
+        if (video) return video;
         const maker = await handleVideoMaker(request, env, url);
         if (maker) return maker;
       } catch (err) {
