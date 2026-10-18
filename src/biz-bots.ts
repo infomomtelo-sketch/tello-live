@@ -6,6 +6,7 @@
 import { stripe, billingEnabled, ensureAnyWebhook, telloPortalUrl, type BillingEnv } from "./billing";
 import { readSiteAsPage } from "./site-reader";
 import { handleGreen } from "./biz-green";
+import { handleReviews } from "./biz-reviews";
 import { handleTelloHub, claudeReply, claudeStream, MetaFilter, parseMeta, type HubEnv } from "./tello-hub";
 
 type Notify = (to: string, subject: string, html: string, text: string, replyTo?: string) => Promise<unknown>;
@@ -506,6 +507,10 @@ document.body.appendChild(f);document.body.appendChild(b);})();`;
         `${bot.business} would like the Tello chat assistant added to its website. It takes one minute.\n\nPaste this line just before the closing </body> tag of every page (or into the site's custom code or footer scripts setting):\n\n${snippet}\n\nStep by step for WordPress, Wix, Squarespace, Shopify and more: ${steps}\n\nA chat button then appears in the corner of the site. Questions? Reply to this email and it goes to ${bot.business}.\n\nSent by Tello for ${bot.business}.`, bot.owner_email);
       await env.DB.prepare("INSERT INTO biz_usage (bot_id, day, n) VALUES (?, ?, 1) ON CONFLICT(bot_id, day) DO UPDATE SET n = n + 1").bind(bot.id, day).run();
       return json({ success: true, message: `Sent to ${to}. Replies come to you at ${bot.owner_email}.` });
+    }
+    if (sub.startsWith("/reviews")) {
+      if (request.method !== "GET" && !(await allow())) return json({ error: "Please wait a minute and try again." }, 429);
+      const r = await handleReviews(env, bot, sub, request.method, body, notify); if (r) return r;
     }
     if ((sub === "/tello" || sub === "/tello-confirm") && request.method === "POST") {
       if (!(await allow())) return json({ error: "Please wait a minute and try again." }, 429);
