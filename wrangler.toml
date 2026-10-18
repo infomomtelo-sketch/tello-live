@@ -12,8 +12,8 @@ workers_dev = true
 # ]
 
 # Daily jobs (src/index.ts scheduled): Green Tello morning briefings. 16:00 UTC is 9am in Fresno (8am in winter).
-# Off until cutover. The daily run also sets up this Worker's Stripe webhook for https://tello.live, which replaces
-# the endpoint the ec-rental Worker uses today, so it must only start together with the routes above.
+# Off until cutover: the ec-rental Worker still sends these from the same database, so turning this on early would
+# send every owner two emails. Uncomment together with the routes above.
 # [triggers]
 # crons = ["0 16 * * *"]
 
@@ -26,15 +26,18 @@ binding = "ASSETS"
 not_found_handling = "404-page"
 run_worker_first = ["/", "/api/*", "/embed/*", "/media/*", "/b/*", "/build", "/business.html", "/privacy", "/terms"]
 
-# Tello's own database. No database_id: wrangler creates it on the first deploy and records the id.
+# The same database the ec-rental Worker uses, so every business assistant, lead and Green Tello subscription carries
+# over with nothing to migrate. Its Tello tables (biz_*, hub_*) move to a database of their own in a later step.
 [[d1_databases]]
 binding = "DB"
-database_name = "tello-live-db"
+database_name = "ec-rental-db"
+database_id = "80e01fdc-9511-4868-9b82-e803290e7700"
 
-# Photos customers attach to messages for businesses that turn uploads on. wrangler creates the bucket on first deploy.
+# Photos customers attach to messages for businesses that turn uploads on. Same bucket as ec-rental for now, because
+# the photos already uploaded are listed in the shared database.
 [[r2_buckets]]
 binding = "PHOTOS"
-bucket_name = "tello-live-photos"
+bucket_name = "ec-rental-photos"
 
 [vars]
 # Must be an address on a domain verified in Resend. RESEND_API_KEY is a secret. Only ecrentalpm.com is verified in
