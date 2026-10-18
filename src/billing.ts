@@ -59,11 +59,13 @@ async function webhookSecrets(env: BillingEnv): Promise<string[]> {
   return rows.results.map((r) => { try { return JSON.parse(r.value).secret as string; } catch { return ""; } }).filter(Boolean);
 }
 
-/** Makes sure Stripe will call our webhook, so paid plans are reported back. The signing secret is only shown once, so it is stored when created. */
+/** Makes sure Stripe will call this Worker's own webhook, so paid plans are reported back. The signing secret is only shown
+ *  once, so it is stored when created. The database is shared with EC Rental for now, so its endpoint's secret is in
+ *  app_settings too; only an endpoint for this origin counts here. */
 export async function ensureAnyWebhook(env: BillingEnv, origin: string): Promise<void> {
-  if (env.STRIPE_WEBHOOK_SECRET || !origin.startsWith("https://")) return;
-  if ((await webhookSecrets(env)).length) return;
+  if (env.STRIPE_WEBHOOK_SECRET || !billingEnabled(env) || !origin.startsWith("https://")) return;
   const endpointUrl = origin + "/api/stripe/webhook";
+  if (await getSetting(env, `stripe_webhook:${keyMode(env)}:${endpointUrl}`)) return;
   // An endpoint we cannot read the secret of is useless to us, so replace it.
   const existing = await stripe(env, "GET", "webhook_endpoints", { limit: 100 });
   for (const ep of existing.data || []) if (ep.url === endpointUrl) await stripe(env, "DELETE", "webhook_endpoints/" + ep.id);

@@ -3,7 +3,7 @@
 The Tello front door: a free AI assistant for small business. Cloudflare Worker + static assets + D1.
 
 Split out of `ec-rental-landing-page` (where tello.live was a second hostname on the EC Rental Worker). This repo is
-Tello only: its own Worker, database, budgets and deploys.
+Tello only: its own Worker, budgets and deploys. It shares EC Rental's D1 database for now (see `docs/CUTOVER.md`).
 
 ## Status
 
@@ -29,7 +29,7 @@ Privacy and Terms.
 
 ```
 npm install
-npx wrangler d1 execute tello-live-db --local --file=schema.sql
+npx wrangler d1 execute ec-rental-db --local --file=schema.sql
 npm run dev          # http://localhost:8787
 npm run typecheck
 ```
@@ -39,7 +39,7 @@ Without `ANTHROPIC_API_KEY` or the AI binding the chat answers "could not answer
 ## Deploy
 
 Push to `main`. `.github/workflows/deploy.yml` needs the secret `CLOUDFLARE_API_TOKEN` (the account id is built in),
-and optionally `ANTHROPIC_API_KEY`, `RESEND_API_KEY`, `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID`, `DEEPINFRA_API_KEY`.
+and optionally `STRIPE_SECRET_KEY`, `ANTHROPIC_API_KEY`, `RESEND_API_KEY`, `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID`, `DEEPINFRA_API_KEY`.
 Daily AI spend caps are in `wrangler.toml` (`HUB_DAILY_CENTS` etc.).
 
 ## Product facts the chat relies on
