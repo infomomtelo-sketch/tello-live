@@ -3,7 +3,7 @@
 The Tello front door: a free AI assistant for small business. Cloudflare Worker + static assets + D1.
 
 Split out of `ec-rental-landing-page` (where tello.live was a second hostname on the EC Rental Worker). This repo is
-Tello only: its own Worker, budgets and deploys. It shares EC Rental's D1 database for now (see `docs/CUTOVER.md`).
+Tello only: its own Worker, database, photo bucket, budgets and deploys.
 
 ## Status
 
@@ -29,7 +29,7 @@ Privacy and Terms.
 
 ```
 npm install
-npx wrangler d1 execute ec-rental-db --local --file=schema.sql
+npx wrangler d1 execute tello-live-db --local --file=schema.sql
 npm run dev          # http://localhost:8787
 npm run typecheck
 ```
