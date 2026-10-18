@@ -40,10 +40,8 @@ jobs:
       - name: Deploy
         if: steps.token.outputs.ok == 'true'
         run: npx wrangler deploy
-      # schema.sql only uses CREATE ... IF NOT EXISTS, so running it on every deploy is safe.
-      - name: Update the database tables
-        if: steps.token.outputs.ok == 'true'
-        run: npm run db:init
+      # No database step while the database is shared: ec-rental's deploy already creates every table in schema.sql
+      # (they are a subset of its own), and this repo's token does not need D1 permissions.
       - name: Copy API keys to the Worker
         if: steps.token.outputs.ok == 'true'
         env:
