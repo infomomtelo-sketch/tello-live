@@ -4,18 +4,15 @@ compatibility_date = "2026-09-25"
 compatibility_flags = ["nodejs_compat"]
 
 workers_dev = true
-# The custom domain is deliberately NOT routed here yet: tello.live is still served by the ec-rental-landing-page
-# Worker. Uncomment these at cutover (see docs/CUTOVER.md); deploying them moves the domain.
-# routes = [
-#   { pattern = "tello.live", custom_domain = true },
-#   { pattern = "www.tello.live", custom_domain = true },
-# ]
+# tello.live and www.tello.live (moved from the ec-rental-landing-page Worker; see docs/CUTOVER.md).
+routes = [
+  { pattern = "tello.live", custom_domain = true },
+  { pattern = "www.tello.live", custom_domain = true },
+]
 
 # Daily jobs (src/index.ts scheduled): Green Tello morning briefings. 16:00 UTC is 9am in Fresno (8am in winter).
-# Off until cutover: the ec-rental Worker still sends these from the same database, so turning this on early would
-# send every owner two emails. Uncomment together with the routes above.
-# [triggers]
-# crons = ["0 16 * * *"]
+[triggers]
+crons = ["0 16 * * *"]
 
 [ai]
 binding = "AI"
