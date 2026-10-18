@@ -47,6 +47,7 @@
     .lead b { color: var(--text); } .lead small { color: var(--muted); display: block; }
     .lead pre { font-size: .8rem; color: var(--muted); }
     .copy-row { display: flex; gap: .5rem; align-items: stretch; } .copy-row pre { flex: 1; margin: 0; }
+    .lunch { margin-top: 1rem; padding: 1rem; border-radius: 12px; background: rgba(232,162,61,.08); border: 1px solid rgba(232,162,61,.35); } .lunch h3 { font-size: 1rem; margin-bottom: .3rem; color: var(--gold); } .lunch label { margin: .7rem 0 0; }
   </style>
 </head>
 <body>
@@ -54,6 +55,7 @@
   <main class="wrap" id="app"><p class="small-note">Loading...</p></main>
   <script src="/vendor/qrcode-generator/qrcode.js"></script>
   <script src="/js/tello-share.js"></script>
+  <script src="/js/tello-talk.js"></script>
   <script>
   (function () {
     var qs = new URLSearchParams(location.search), app = document.getElementById('app'), tok = qs.get('t') || '', cs = qs.get('cs') || '', billing = qs.get('billing') || '', tries = 0, data = null;
@@ -149,13 +151,32 @@
       api('/today', 'GET').then(function (t) {
         tBody.textContent = '';
         t.items.forEach(function (x) { var p0 = el('p', '', x); p0.style.marginBottom = '.4rem'; tBody.appendChild(p0); });
-        var canSpeak = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window, tr = el('div', 'row');
-        if (canSpeak) {
-          var sp = el('button', 'btn small', 'Read it to me'); sp.type = 'button'; var speaking = false;
-          sp.addEventListener('click', function () { if (speaking) { speechSynthesis.cancel(); speaking = false; sp.textContent = 'Read it to me'; return; } var u = new SpeechSynthesisUtterance(t.speech); u.lang = 'en-US'; u.onend = u.onerror = function () { speaking = false; sp.textContent = 'Read it to me'; }; speaking = true; sp.textContent = 'Stop'; speechSynthesis.cancel(); speechSynthesis.speak(u); });
-          tr.appendChild(sp);
+        // Lunch line: between 10:30 and 2pm on the owner's own clock, Tello offers food. The favorite is remembered on this device only.
+        var nowH = new Date().getHours() + new Date().getMinutes() / 60, lunch = nowH >= 10.5 && nowH < 14, fav = 'lunch';
+        try { fav = localStorage.getItem('tello_lunch_fav') || 'lunch'; } catch (e) {}
+        function lunchSay() { return 'It is lunch time. ' + (fav === 'lunch' ? 'Hungry? ' : 'How about ' + fav + ' today? ') + 'Tap DoorDash or Uber Eats below and I will open it ready to order.'; }
+        var speech = t.speech + (lunch ? ' ' + lunchSay() : ''), tr = el('div', 'row');
+        var sp = el('button', 'btn small', 'Hear Tello'); sp.type = 'button'; var speaking = false;
+        function stopTalk() { speaking = false; sp.textContent = 'Hear Tello'; }
+        function talk(text) {
+          if (window.ECTelloTalk) { speaking = true; sp.textContent = 'Stop'; ECTelloTalk.speak(text, null, { onEnd: stopTalk }); }
+          else if ('speechSynthesis' in window) { var u = new SpeechSynthesisUtterance(text); u.lang = 'en-US'; u.onend = u.onerror = stopTalk; speaking = true; sp.textContent = 'Stop'; speechSynthesis.cancel(); speechSynthesis.speak(u); }
         }
-        tBody.appendChild(tr);
+        sp.addEventListener('click', function () { if (speaking) { if (window.ECTelloTalk) ECTelloTalk.stop(); else speechSynthesis.cancel(); stopTalk(); return; } talk(speech); });
+        tr.appendChild(sp); tBody.appendChild(tr);
+        if (lunch) {
+          var lb = el('div', 'lunch'), lq = el('p', '', lunchSay()); lb.appendChild(el('h3', '', 'Lunch with Tello')); lb.appendChild(lq);
+          var ll = el('label', '', 'What do you feel like?'), li = el('input'); li.type = 'text'; li.maxLength = 40; li.placeholder = 'tacos, pho, salad...'; li.value = fav === 'lunch' ? '' : fav; ll.appendChild(li); lb.appendChild(ll);
+          var lr = el('div', 'row'), links = [['DoorDash', function (q) { return 'https://www.doordash.com/search/store/' + encodeURIComponent(q) + '/'; }], ['Uber Eats', function (q) { return 'https://www.ubereats.com/search?q=' + encodeURIComponent(q); }], ['Nearby on the map', function (q) { return 'https://www.google.com/maps/search/' + encodeURIComponent(q + ' near me'); }]];
+          var anchors = links.map(function (x, i) { var a = el('a', 'btn small' + (i ? ' ghost' : ''), x[0]); a.target = '_blank'; a.rel = 'noopener'; lr.appendChild(a); return a; });
+          function paintLinks() { var q = li.value.trim() || 'lunch'; anchors.forEach(function (a, i) { a.href = links[i][1](q); }); }
+          li.addEventListener('input', function () { fav = li.value.trim() || 'lunch'; try { localStorage.setItem('tello_lunch_fav', fav); } catch (e) {} lq.textContent = lunchSay(); speech = t.speech + ' ' + lunchSay(); paintLinks(); });
+          paintLinks(); lb.appendChild(lr); lb.appendChild(el('p', 'small-note', 'You order and pay in the app you pick. Tello never sees your card.')); tBody.appendChild(lb);
+          // Say it out loud once a day when the page opens at lunch time (browsers may block sound until you tap; Hear Tello always works).
+          var dayKey = 'tello_lunch_said_' + new Date().toDateString(), said = false;
+          try { said = !!localStorage.getItem(dayKey); localStorage.setItem(dayKey, '1'); } catch (e) {}
+          if (!said) talk(lunchSay());
+        }
         if (t.open.length) { var h = el('p', 'small-note', 'Waiting for a reply'); h.style.marginTop = '1rem'; tBody.appendChild(h); }
         t.open.forEach(function (o) {
           var x = el('div', 'lead'); x.appendChild(el('b', '', o.contact)); x.appendChild(el('small', '', (o.name ? o.name + ' - ' : '') + fmt(o.created_at) + (o.waiting ? ' - waiting more than a day' : '')));
