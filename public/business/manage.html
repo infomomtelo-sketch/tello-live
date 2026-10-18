@@ -72,6 +72,31 @@
     }
     function fmt(d) { try { return new Date(d).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' }); } catch (e) { return d; } }
     var gMsgs = [];
+    // Reviews: open with Yellow Tello or Green Tello; otherwise offer Yellow Tello.
+    function reviewsCard(d) {
+      var card = el('section', 'card'), note = el('p', 'err', ''); card.appendChild(el('h2', '', d.green_on ? 'Reviews' : 'Yellow Tello: Reviews'));
+      card.appendChild(el('p', 'small-note', 'Ask finished customers for a Google review by email, add customers you already have, and get a reply drafted for reviews you receive. Nothing is sent until you tap Send.'));
+      var row = el('div', 'row');
+      if (d.reviews_on) {
+        var op = el('a', 'btn small', 'Open Reviews'); op.href = '/business/reviews?t=' + encodeURIComponent(tok); row.appendChild(op);
+        if (d.green_on) card.appendChild(el('p', 'small-note', 'Included in your Green Tello.'));
+        else {
+          card.appendChild(el('p', 'small-note', 'Yellow Tello is on. $' + d.yellow_price + ' a month' + (d.yellow_cancel ? ', cancelled and on until ' + fmt(d.yellow_period_end) : (d.yellow_period_end ? ', next charge ' + fmt(d.yellow_period_end) : '')) + '.'));
+          var mg = el('button', 'btn small ghost', 'Manage billing'); mg.type = 'button';
+          mg.addEventListener('click', function () { mg.disabled = true; api('/yellow-portal', 'POST', {}).then(function (j) { if (j.url) location.href = j.url; }).catch(function (e) { mg.disabled = false; note.textContent = e.message; }); });
+          row.appendChild(mg);
+        }
+      } else {
+        card.appendChild(el('p', 'small-note', '$' + d.yellow_price + ' a month, cancel any time. Also included in Green Tello.'));
+        if (d.billing_on) {
+          var st = el('button', 'btn small', 'Start Yellow Tello'); st.type = 'button';
+          st.addEventListener('click', function () { st.disabled = true; api('/yellow-checkout', 'POST', {}).then(function (j) { if (j.url) location.href = j.url; else load(); }).catch(function (e) { st.disabled = false; note.textContent = e.message; }); });
+          row.appendChild(st);
+        }
+      }
+      card.appendChild(row); card.appendChild(note);
+      return card;
+    }
     function greenCard(d) {
       var card = el('section', 'card'); card.appendChild(el('h2', '', 'Green Tello'));
       var note = el('p', 'err', '');
@@ -146,6 +171,7 @@
       setTimeout(function () { greenOffer(data); }, 1200);
       var d = data, msg = el('p', 'err', ''); msg.id = 'msg';
       app.appendChild(greenCard(d));
+      app.appendChild(reviewsCard(d));
       var today = el('section', 'card'); today.appendChild(el('h2', '', 'Today with Tello'));
       var tBody = el('div'); tBody.appendChild(el('p', 'small-note', 'Loading...')); today.appendChild(tBody); app.appendChild(today);
       api('/today', 'GET').then(function (t) {
@@ -270,7 +296,12 @@
     function say(text) { var n = el('p', 'note-ok', text); app.insertBefore(n, app.firstChild); }
     function afterBilling() {
       if (!billing) return;
-      if (billing === 'canceled') say('No problem, you were not charged. You can start Green Tello any time.');
+      if (billing === 'canceled') say('No problem, you were not charged.');
+      else if (billing === 'yellow') {
+        if (data.yellow_on) say('Yellow Tello is on. Open Reviews below to ask your customers for reviews.');
+        else if (tries++ < 5) { say('Confirming your payment...'); setTimeout(load, 2500); return; }
+        else say('Your payment is still being confirmed. Please refresh in a minute before trying again.');
+      }
       else if (billing === 'success') {
         if (data.subscribed) say('Green Tello is on. Your 7 days free have started, and your card is not charged until they end.');
         else if (tries++ < 5) { say('Confirming your payment...'); setTimeout(load, 2500); return; }
@@ -279,7 +310,9 @@
       billing = ''; cs = '';
       try { history.replaceState(null, '', '?t=' + encodeURIComponent(tok)); } catch (e) { /* the address stays as it is */ }
     }
+    var ys = qs.get('ys') || '';
     function load() {
+      if (ys) { var c = ys; ys = ''; return api('/yellow-confirm', 'POST', { cs: c }).catch(function () {}).then(load); }
       return api('', 'GET').then(function (j) { data = j; try { localStorage.setItem('tello_owner', JSON.stringify({ t: tok, id: j.id, business: String(j.business || '').slice(0, 80) })); } catch (e) {} render(); afterBilling(); }).catch(function (e) { app.textContent = ''; app.appendChild(el('p', 'err', e.message)); var lk = el('p', 'small-note'), a1 = el('a', '', 'Email me my private link'); a1.href = '/business#mylink'; lk.appendChild(a1); lk.appendChild(document.createTextNode(' or ')); var a2 = el('a', '', 'set up a new Tello'); a2.href = '/business#setup'; lk.appendChild(a2); app.appendChild(lk); });
     }
     load();

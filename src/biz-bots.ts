@@ -8,6 +8,7 @@ import { readSiteAsPage } from "./site-reader";
 import { handleGreen } from "./biz-green";
 import { handleReviews } from "./biz-reviews";
 import { recordEvent } from "./biz-stats";
+import { applyYellowSub, getYellow, handleYellow, hasReviews, yellowOn, YELLOW_PRICE } from "./biz-yellow";
 import { handleTelloHub, claudeReply, claudeStream, MetaFilter, parseMeta, type HubEnv } from "./tello-hub";
 
 type Notify = (to: string, subject: string, html: string, text: string, replyTo?: string) => Promise<unknown>;
@@ -234,12 +235,15 @@ function manageView(b: Bot, leads: unknown[], pro: Pro, uploads: boolean) {
 export async function handleBotStripeEvent(env: BotEnv, event: Record<string, any>): Promise<boolean> {
   const obj = event.data?.object || {};
   if (event.type === "checkout.session.completed" && obj.metadata?.bot_id) {
-    if (obj.mode === "subscription" && obj.subscription) await applyBotSub(env, await stripe(env, "GET", "subscriptions/" + obj.subscription), obj.metadata.bot_id);
+    if (obj.mode === "subscription" && obj.subscription) {
+      const s = await stripe(env, "GET", "subscriptions/" + obj.subscription);
+      if (obj.metadata.plan === "yellow") await applyYellowSub(env, s, obj.metadata.bot_id); else await applyBotSub(env, s, obj.metadata.bot_id);
+    }
     return true;
   }
   if (typeof event.type === "string" && event.type.startsWith("customer.subscription.") && obj.metadata?.bot_id) {
     const sub = event.type === "customer.subscription.deleted" ? obj : await stripe(env, "GET", "subscriptions/" + obj.id);
-    await applyBotSub(env, sub, obj.metadata.bot_id);
+    if (obj.metadata.plan === "yellow") await applyYellowSub(env, sub, obj.metadata.bot_id); else await applyBotSub(env, sub, obj.metadata.bot_id);
     return true;
   }
   return false;
@@ -472,7 +476,9 @@ document.body.appendChild(f);document.body.appendChild(b);})();`;
         } catch (err) { console.error("[biz-bots checkout return]", err instanceof Error ? err.message : err); }
       }
       const leads = (await env.DB.prepare("SELECT l.id, l.name, l.contact, l.message, l.created_at, (SELECT f.id FROM biz_files f WHERE f.lead_id = l.id LIMIT 1) AS file_id FROM biz_leads l WHERE l.bot_id = ? ORDER BY l.id DESC LIMIT 50").bind(bot.id).all()).results;
-      return json({ ...manageView(bot, leads, await loadPro(env, bot.id), await uploadsOn(env, bot.id)), billing_on: billingEnabled(env), used_today: await usedToday(env, bot.id) });
+      const y = await getYellow(env, bot.id);
+      return json({ ...manageView(bot, leads, await loadPro(env, bot.id), await uploadsOn(env, bot.id)), billing_on: billingEnabled(env), used_today: await usedToday(env, bot.id),
+        yellow_on: yellowOn(y), yellow_price: YELLOW_PRICE.cents / 100, yellow_cancel: !!y?.cancel, yellow_period_end: y?.period_end ?? null, reviews_on: GOOD.includes(bot.status) || yellowOn(y) });
     }
     if (sub === "" && request.method === "PUT") {
       await env.DB.prepare("UPDATE biz_bots SET business = ?, greeting = ?, extra = ?, facts = ?, updated_at = ? WHERE id = ?")
@@ -510,8 +516,13 @@ document.body.appendChild(f);document.body.appendChild(b);})();`;
       return json({ success: true, message: `Sent to ${to}. Replies come to you at ${bot.owner_email}.` });
     }
     if (sub === "/event" && request.method === "POST") return recordEvent(env, bot.id, body.e);
+    if (sub.startsWith("/yellow-") && request.method === "POST") {
+      if (!(await allow())) return json({ error: "Please wait a minute and try again." }, 429);
+      const y = await handleYellow(env, bot, sub, ORIGIN, clean(body.cs, 120)); if (y) return y;
+    }
     if (sub.startsWith("/reviews")) {
       if (request.method !== "GET" && !(await allow())) return json({ error: "Please wait a minute and try again." }, 429);
+      if (!(await hasReviews(env, bot))) return json({ error: `Reviews are part of Yellow Tello ($${YELLOW_PRICE.cents / 100} a month) and Green Tello.`, need: "yellow" }, 402);
       const r = await handleReviews(env, bot, sub, request.method, body, notify); if (r) return r;
     }
     if ((sub === "/tello" || sub === "/tello-confirm") && request.method === "POST") {
