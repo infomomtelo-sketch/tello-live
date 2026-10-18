@@ -65,7 +65,7 @@
     }
     function render(d) {
       app.textContent = '';
-      var top = el('section'); top.appendChild(el('p', 'kick', 'Preview')); top.appendChild(el('h1', '', 'Reviews for ' + d.business));
+      var top = el('section'); top.appendChild(el('p', 'kick', 'Yellow Tello')); top.appendChild(el('h1', '', 'Reviews for ' + d.business));
       top.appendChild(el('p', 'lede', 'Ask finished customers for a review, and get a reply ready for reviews you receive. Nothing is sent until you tap Send.')); app.appendChild(top);
 
       var c1 = el('section', 'card'); c1.appendChild(el('h2', '', '1. Your review link'));
@@ -115,7 +115,7 @@
       var back = el('p', 'small-note'), a = el('a', '', 'Back to my Tello page'); a.href = '/business/manage?t=' + encodeURIComponent(tok); back.appendChild(a); app.appendChild(back);
     }
     if (!tok) { app.textContent = ''; app.appendChild(el('p', 'err', 'Open this page from your private Tello link.')); return; }
-    api('/reviews', 'GET').then(render).catch(function (e) { app.textContent = ''; app.appendChild(el('p', 'err', e.message)); });
+    api('/reviews', 'GET').then(render).catch(function (e) { app.textContent = ''; app.appendChild(el('p', 'err', e.message)); var a = el('a', 'btn small', 'Start Yellow Tello on my Tello page'); a.href = '/business/manage?t=' + encodeURIComponent(tok); app.appendChild(a); });
   })();
   </script>
 </body>
