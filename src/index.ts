@@ -8,6 +8,7 @@ import { handleVideoRequest } from "./video-request";
 import { handleBizBots, handleBotStripeEvent } from "./biz-bots";
 import { ensureAnyWebhook, handleStripeWebhook, type BillingEnv } from "./billing";
 import { runGreenBriefings } from "./biz-green";
+import { sendWeeklyStats } from "./biz-stats";
 
 interface Env extends HubEnv, BillingEnv {
   ASSETS: Fetcher;
@@ -121,5 +122,6 @@ export default {
     ctx.waitUntil(runGreenBriefings(env, notify, "https://tello.live")
       .then((n) => console.log("[green-briefings] sent", n))
       .catch((err) => console.error("[green-briefings]", err instanceof Error ? err.message : err)));
+    ctx.waitUntil(sendWeeklyStats(env, notify).catch((err) => console.error("[weekly-stats]", err instanceof Error ? err.message : err)));
   },
 };

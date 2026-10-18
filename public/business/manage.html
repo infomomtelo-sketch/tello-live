@@ -150,6 +150,8 @@
       var tBody = el('div'); tBody.appendChild(el('p', 'small-note', 'Loading...')); today.appendChild(tBody); app.appendChild(today);
       api('/today', 'GET').then(function (t) {
         tBody.textContent = '';
+        function track(e) { try { fetch('/api/biz/manage/event', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ t: tok, e: e }) }); } catch (x) {} }
+        track('today_view');
         t.items.forEach(function (x) { var p0 = el('p', '', x); p0.style.marginBottom = '.4rem'; tBody.appendChild(p0); });
         // Lunch line: between 10:30 and 2pm on the owner's own clock, Tello offers food. The favorite is remembered on this device only.
         var nowH = new Date().getHours() + new Date().getMinutes() / 60, lunch = nowH >= 10.5 && nowH < 14, fav = 'lunch';
@@ -159,6 +161,7 @@
         var sp = el('button', 'btn small', 'Hear Tello'); sp.type = 'button'; var speaking = false;
         function stopTalk() { speaking = false; sp.textContent = 'Hear Tello'; }
         function talk(text) {
+          if (lunch) track('lunch_heard');
           if (window.ECTelloTalk) { speaking = true; sp.textContent = 'Stop'; ECTelloTalk.speak(text, null, { onEnd: stopTalk }); }
           else if ('speechSynthesis' in window) { var u = new SpeechSynthesisUtterance(text); u.lang = 'en-US'; u.onend = u.onerror = stopTalk; speaking = true; sp.textContent = 'Stop'; speechSynthesis.cancel(); speechSynthesis.speak(u); }
         }
@@ -168,7 +171,8 @@
           var lb = el('div', 'lunch'), lq = el('p', '', lunchSay()); lb.appendChild(el('h3', '', 'Lunch with Tello')); lb.appendChild(lq);
           var ll = el('label', '', 'What do you feel like?'), li = el('input'); li.type = 'text'; li.maxLength = 40; li.placeholder = 'tacos, pho, salad...'; li.value = fav === 'lunch' ? '' : fav; ll.appendChild(li); lb.appendChild(ll);
           var lr = el('div', 'row'), links = [['DoorDash', function (q) { return 'https://www.doordash.com/search/store/' + encodeURIComponent(q) + '/'; }], ['Uber Eats', function (q) { return 'https://www.ubereats.com/search?q=' + encodeURIComponent(q); }], ['Nearby on the map', function (q) { return 'https://www.google.com/maps/search/' + encodeURIComponent(q + ' near me'); }]];
-          var anchors = links.map(function (x, i) { var a = el('a', 'btn small' + (i ? ' ghost' : ''), x[0]); a.target = '_blank'; a.rel = 'noopener'; lr.appendChild(a); return a; });
+          var anchors = links.map(function (x, i) { var a = el('a', 'btn small' + (i ? ' ghost' : ''), x[0]); a.target = '_blank'; a.rel = 'noopener'; a.addEventListener('click', function () { track('lunch_tap'); }); lr.appendChild(a); return a; });
+          track('lunch_shown');
           function paintLinks() { var q = li.value.trim() || 'lunch'; anchors.forEach(function (a, i) { a.href = links[i][1](q); }); }
           li.addEventListener('input', function () { fav = li.value.trim() || 'lunch'; try { localStorage.setItem('tello_lunch_fav', fav); } catch (e) {} lq.textContent = lunchSay(); speech = t.speech + ' ' + lunchSay(); paintLinks(); });
           paintLinks(); lb.appendChild(lr); lb.appendChild(el('p', 'small-note', 'You order and pay in the app you pick. Tello never sees your card.')); tBody.appendChild(lb);

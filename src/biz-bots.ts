@@ -7,6 +7,7 @@ import { stripe, billingEnabled, ensureAnyWebhook, telloPortalUrl, type BillingE
 import { readSiteAsPage } from "./site-reader";
 import { handleGreen } from "./biz-green";
 import { handleReviews } from "./biz-reviews";
+import { recordEvent } from "./biz-stats";
 import { handleTelloHub, claudeReply, claudeStream, MetaFilter, parseMeta, type HubEnv } from "./tello-hub";
 
 type Notify = (to: string, subject: string, html: string, text: string, replyTo?: string) => Promise<unknown>;
@@ -508,6 +509,7 @@ document.body.appendChild(f);document.body.appendChild(b);})();`;
       await env.DB.prepare("INSERT INTO biz_usage (bot_id, day, n) VALUES (?, ?, 1) ON CONFLICT(bot_id, day) DO UPDATE SET n = n + 1").bind(bot.id, day).run();
       return json({ success: true, message: `Sent to ${to}. Replies come to you at ${bot.owner_email}.` });
     }
+    if (sub === "/event" && request.method === "POST") return recordEvent(env, bot.id, body.e);
     if (sub.startsWith("/reviews")) {
       if (request.method !== "GET" && !(await allow())) return json({ error: "Please wait a minute and try again." }, 429);
       const r = await handleReviews(env, bot, sub, request.method, body, notify); if (r) return r;
