@@ -6,6 +6,7 @@
     biz: { title: 'Tello for your business', len: '49 sec', file: 'tello-business' },
     meet: { title: 'Meet Tello', len: '60 sec', file: 'tello-meet' },
     green: { title: 'Free chat to Green Tello', len: '59 sec', file: 'tello-free-to-green' },
+    yellow: { title: 'Yellow Tello: more Google reviews', len: '57 sec', file: 'tello-yellow' },
     mk: { title: 'Make a video with Tello', len: '30 sec', file: 'tello-make' }
   };
   var PLAY = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
