@@ -62,3 +62,6 @@ jobs:
       - name: Check the deployed pages
         if: steps.token.outputs.ok == 'true'
         run: scripts/smoke.sh https://tello-live.infomomtelo.workers.dev
+      - name: Check tello.live itself
+        if: steps.token.outputs.ok == 'true'
+        run: scripts/smoke.sh https://tello.live
