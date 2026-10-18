@@ -19,7 +19,7 @@ Tello only: its own Worker, budgets and deploys. It shares EC Rental's D1 databa
 | How-to guide pages (6), `sitemap.xml`, `llms.txt`, `robots.txt` | Ported (static files) |
 | `/meeting` (talking demo; its Rentals persona calls the EC Rental chat, so it is held back and removed from the menus and the chat's links until reworked), page-view counter | Not ported |
 | Own Privacy / Terms | Not written: `/privacy` and `/terms` redirect to ecrentalpm.com |
-| Domain tello.live | Still served by the ec-rental Worker. See `docs/CUTOVER.md` |
+| Domain tello.live | Served by this Worker. See `docs/CUTOVER.md` |
 
 Every internal link on the site now points at a page or route that exists. Before moving the domain: test the Stripe
 checkout with a test key, deploy to the workers.dev address and click through it, and decide on Tello's own
