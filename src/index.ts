@@ -6,7 +6,7 @@ import { type HubEnv } from "./tello-hub";
 import { handleVideoMaker } from "./video-maker";
 import { handleVideoRequest } from "./video-request";
 import { handleBizBots, handleBotStripeEvent } from "./biz-bots";
-import { handleStripeWebhook, type BillingEnv } from "./billing";
+import { ensureAnyWebhook, handleStripeWebhook, type BillingEnv } from "./billing";
 import { runGreenBriefings } from "./biz-green";
 
 interface Env extends HubEnv, BillingEnv {
@@ -86,6 +86,13 @@ export default {
       catch (err) { console.error("[stripe-webhook]", err instanceof Error ? err.message : err); return json({ error: "Webhook failed" }, 500); }
     }
 
+    // Which keys and bindings this Worker has, without showing any of them. The deploy checks it after every deploy.
+    if (url.pathname === "/api/health" && get) {
+      let db = false;
+      try { db = !!(await env.DB.prepare("SELECT 1 AS ok FROM biz_bots LIMIT 1").all()); } catch (err) { console.error("[health]", err instanceof Error ? err.message : err); }
+      return json({ ok: db, db, ai: !!env.AI, photos: !!env.PHOTOS, anthropic: !!env.ANTHROPIC_API_KEY, email: !!env.RESEND_API_KEY, stripe: !!env.STRIPE_SECRET_KEY });
+    }
+
     if (url.pathname.startsWith("/api/") || /^\/embed\//.test(url.pathname)) {
       const allow = () => underLimit(env.CHAT_LIMITER, "ip:" + clientIp(request));
       const notify = (to: string, subject: string, html: string, text: string, replyTo?: string) => sendEmail(env, to, subject, html, text, replyTo || "support@tello.live");
@@ -109,6 +116,8 @@ export default {
   // Daily cron (wrangler.toml [triggers]): each Green Tello owner's morning briefing.
   async scheduled(_controller: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
     const notify = (to: string, subject: string, html: string, text: string, replyTo?: string) => sendEmail(env, to, subject, html, text, replyTo || "support@tello.live");
+    // Stripe sends Green Tello plan changes to this Worker's own endpoint, created here once (or on the first checkout).
+    ctx.waitUntil(ensureAnyWebhook(env, "https://tello.live").catch((err) => console.error("[stripe-webhook-setup]", err instanceof Error ? err.message : err)));
     ctx.waitUntil(runGreenBriefings(env, notify, "https://tello.live")
       .then((n) => console.log("[green-briefings] sent", n))
       .catch((err) => console.error("[green-briefings]", err instanceof Error ? err.message : err)));
