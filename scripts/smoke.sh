@@ -4,7 +4,7 @@
 set -uo pipefail
 BASE="${1%/}"
 fail=0
-for path in / /business /business/manage /models /install /make /videos /website /social-setup /sitemap.xml /robots.txt /llms.txt /api/public/tello-hub/config; do
+for path in / /business /business/manage /models /install /make /videos /website /social-setup /pay /sitemap.xml /robots.txt /llms.txt /api/public/tello-hub/config; do
   code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 "$BASE$path")
   echo "$code $path"
   [ "$code" = "200" ] || fail=1
