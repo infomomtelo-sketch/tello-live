@@ -22,6 +22,8 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || '701117dde6af00d42bac3c4058b660be' }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -65,3 +67,20 @@ jobs:
       - name: Check tello.live itself
         if: steps.token.outputs.ok == 'true'
         run: scripts/smoke.sh https://tello.live
+      # Tell Bing, Yandex and other IndexNow engines about public pages that changed. The key file is in public/.
+      - name: Ping search engines about changed pages (IndexNow)
+        if: steps.token.outputs.ok == 'true'
+        continue-on-error: true
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: |
+          if [ -n "$BEFORE" ] && git cat-file -e "$BEFORE" 2>/dev/null; then
+            files=$(git diff --name-only "$BEFORE" HEAD -- 'public/*.html' || true)
+          else
+            files="public/hub.html"
+          fi
+          urls=$(for f in $files; do [ -f "$f" ] || continue; case "$f" in public/*/*|public/b.html) continue;; esac; p="${f#public/}"; p="${p%.html}"; [ "$p" = "hub" ] && p=""; echo "https://tello.live/$p"; done)
+          if [ -z "$urls" ]; then echo "No public pages changed."; exit 0; fi
+          echo "$urls"
+          body=$(printf '%s\n' $urls | jq -R . | jq -s '{host: "tello.live", key: "1842a03c0db4f7bd68c1e491cb74e176", keyLocation: "https://tello.live/1842a03c0db4f7bd68c1e491cb74e176.txt", urlList: .}')
+          curl -sS -o /dev/null -w "IndexNow answered %{http_code}\n" -X POST https://api.indexnow.org/indexnow -H 'Content-Type: application/json; charset=utf-8' -d "$body"
