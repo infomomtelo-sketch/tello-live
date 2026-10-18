@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <title>Tello reviews | tello.live</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin /><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --ink: #0b1f19; --deep: #123a30; --gold: #e8a23d; --text: #e9efe9; --muted: #a9bdb3; --line: rgba(255,255,255,0.1); }
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--ink); color: var(--text); line-height: 1.5; }
+    a { color: var(--gold); }
+    .wrap { max-width: 1040px; margin: 0 auto; padding: 0 16px; }
+    header { padding: 1.1rem 0; border-bottom: 1px solid var(--line); }
+    header .wrap { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+    .brand { font-weight: 800; letter-spacing: 0.02em; text-decoration: none; font-size: 1.15rem; color: var(--text); }
+    .brand span { color: var(--gold); }
+    .nav a { color: var(--muted); text-decoration: none; font-size: 0.92rem; margin-left: 1.1rem; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; background: var(--gold); color: var(--ink); font: inherit; font-weight: 700; text-decoration: none; border: 0; border-radius: 999px; padding: 0.8rem 1.35rem; cursor: pointer; }
+    .btn:hover { filter: brightness(1.07); } .btn:disabled { opacity: .55; cursor: default; }
+    .btn.ghost { background: transparent; color: var(--text); border: 1.5px solid rgba(255,255,255,0.3); }
+    .btn.small { padding: 0.5rem 1rem; font-size: 0.88rem; }
+    h1 { font-size: clamp(2rem, 5vw, 3rem); line-height: 1.08; letter-spacing: -0.02em; margin: 0.6rem 0 1rem; }
+    h2 { font-size: clamp(1.4rem, 3vw, 1.9rem); letter-spacing: -0.01em; margin-bottom: 0.4rem; }
+    .kick { color: var(--gold); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; font-size: 0.8rem; }
+    .lede { color: var(--muted); font-size: 1.08rem; max-width: 520px; }
+    .card { background: rgba(255,255,255,0.04); border: 1px solid var(--line); border-radius: 16px; padding: 1.4rem; }
+    label { display: flex; flex-direction: column; gap: 0.3rem; font-weight: 600; font-size: 0.85rem; margin-bottom: 0.8rem; }
+    input, textarea { font: inherit; font-weight: 400; font-size: 1rem; padding: 0.65rem 0.75rem; border-radius: 10px; border: 1px solid rgba(255,255,255,0.25); background: rgba(0,0,0,0.35); color: var(--text); width: 100%; }
+    textarea { min-height: 110px; resize: vertical; }
+    input:focus, textarea:focus, .btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
+    .hp { position: absolute; left: -9999px; }
+    .note-ok { background: rgba(31,160,112,.15); border: 1px solid rgba(31,160,112,.4); border-radius: 12px; padding: .7rem 1rem; margin: 0 0 1rem; font-size: .95rem; }
+    .err { color: #ff9b8a; font-size: 0.92rem; margin: 0.4rem 0; min-height: 1.2em; }
+    .ok { color: #8fe3b0; }
+    .small-note { color: var(--muted); font-size: 0.85rem; margin-top: 0.6rem; }
+    code, pre { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.85rem; }
+    pre { background: rgba(0,0,0,0.45); border: 1px solid var(--line); border-radius: 10px; padding: 0.75rem; white-space: pre-wrap; word-break: break-all; margin: 0.4rem 0 0.6rem; }
+    footer { border-top: 1px solid var(--line); padding: 1.5rem 0 2rem; color: var(--muted); font-size: 0.85rem; margin-top: 3rem; }
+
+    main { padding: 2rem 0; display: grid; gap: 1.2rem; }
+    .card h2 { font-size: 1.2rem; margin-bottom: .5rem; }
+    .row { display: flex; gap: .6rem; flex-wrap: wrap; align-items: center; margin-top: .6rem; }
+    .badge { display: inline-block; font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: .15rem .6rem; border-radius: 999px; background: var(--deep); color: var(--gold); }
+    .lead { border-top: 1px solid var(--line); padding: .8rem 0; } .lead:first-child { border-top: 0; }
+    .lead b { color: var(--text); } .lead small { color: var(--muted); display: block; }
+    .lead pre { font-size: .8rem; color: var(--muted); }
+    .copy-row { display: flex; gap: .5rem; align-items: stretch; } .copy-row pre { flex: 1; margin: 0; }
+      .stars button { background: transparent; border: 1px solid var(--line); color: var(--muted); border-radius: 8px; padding: .3rem .6rem; font: inherit; cursor: pointer; }
+    .stars button[aria-pressed="true"] { background: var(--deep); color: var(--gold); border-color: var(--gold); }
+  </style>
+</head>
+<body>
+  <header><div class="wrap"><a class="brand" href="/">tello<span>.live</span></a><span class="small-note" style="margin:0">Private page. Do not share this link.</span></div></header>
+  <main class="wrap" id="app"><p class="small-note">Loading...</p></main>
+  <script>
+  (function () {
+    var tok = new URLSearchParams(location.search).get('t') || '', app = document.getElementById('app');
+    function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+    function api(path, method, body) {
+      var opt = { method: method, headers: { 'Content-Type': 'application/json' } };
+      if (method !== 'GET') opt.body = JSON.stringify(Object.assign({ t: tok }, body || {}));
+      return fetch('/api/biz/manage' + path + (method === 'GET' ? '?t=' + encodeURIComponent(tok) : ''), opt).then(function (r) { return r.json().then(function (d) { if (!r.ok) throw new Error(d.error || 'Something went wrong.'); return d; }); });
+    }
+    function render(d) {
+      app.textContent = '';
+      var top = el('section'); top.appendChild(el('p', 'kick', 'Preview')); top.appendChild(el('h1', '', 'Reviews for ' + d.business));
+      top.appendChild(el('p', 'lede', 'Ask finished customers for a review, and get a reply ready for reviews you receive. Nothing is sent until you tap Send.')); app.appendChild(top);
+
+      var c1 = el('section', 'card'); c1.appendChild(el('h2', '', '1. Your review link'));
+      c1.appendChild(el('p', 'small-note', 'In Google Business Profile, open Ask for reviews and copy the link. Any review page link starting with https:// works.'));
+      var lab = el('label', '', 'Review link'), inp = el('input'); inp.type = 'url'; inp.placeholder = 'https://g.page/r/...'; inp.value = d.link || ''; lab.appendChild(inp); c1.appendChild(lab);
+      var m1 = el('p', 'err'), b1 = el('button', 'btn small', 'Save link'); b1.type = 'button';
+      b1.addEventListener('click', function () { b1.disabled = true; m1.className = 'err'; m1.textContent = ''; api('/reviews-link', 'PUT', { link: inp.value }).then(function (r) { d.link = r.link; m1.className = 'ok'; m1.textContent = 'Saved.'; renderLeads(); }).catch(function (e) { m1.textContent = e.message; }).then(function () { b1.disabled = false; }); });
+      c1.appendChild(b1); c1.appendChild(m1); app.appendChild(c1);
+
+      var c2 = el('section', 'card'); c2.appendChild(el('h2', '', '3. Ask for a review'));
+      c2.appendChild(el('p', 'small-note', 'These are finished leads and customers you added, with an email address. Each customer is asked once. Replies come to you at your email.'));
+      var tl = el('label', '', 'Message ({first name} is filled in for each customer)'), ta = el('textarea'); ta.value = d.ask_text; tl.appendChild(ta); c2.appendChild(tl);
+      var list = el('div'); c2.appendChild(list); app.appendChild(c2);
+      var c2b = el('section', 'card'); c2b.appendChild(el('h2', '', '2. Add customers you already have'));
+      c2b.appendChild(el('p', 'small-note', 'One per line, name and email, for example: Maria Lopez, maria@example.com. Only add people who bought from you. Up to 50 at a time.'));
+      var al = el('label', '', 'Customers'), at = el('textarea'); al.appendChild(at); c2b.appendChild(al);
+      var m2 = el('p', 'err'), b2 = el('button', 'btn small', 'Add customers'); b2.type = 'button';
+      b2.addEventListener('click', function () { b2.disabled = true; m2.className = 'err'; m2.textContent = ''; api('/reviews-add', 'POST', { list: at.value }).then(function (x) { m2.className = 'ok'; m2.textContent = 'Added ' + x.added + (x.skipped ? ', skipped ' + x.skipped + ' (no email or already on the list)' : '') + '.'; at.value = ''; return api('/reviews', 'GET').then(function (n) { d.leads = n.leads; renderLeads(); }); }).catch(function (e) { m2.textContent = e.message; }).then(function () { b2.disabled = false; }); });
+      c2b.appendChild(b2); c2b.appendChild(m2); app.insertBefore(c2b, c2);
+      function renderLeads() {
+        list.textContent = '';
+        if (!d.leads.length) { list.appendChild(el('p', 'small-note', 'No finished leads with an email yet. Mark a lead done on your Tello page and it shows here.')); return; }
+        d.leads.forEach(function (l) {
+          var row = el('div', 'lead'), who = el('b', '', l.name || l.contact); row.appendChild(who); row.appendChild(el('small', '', l.contact + ' \u00b7 done ' + (l.done_at || '').slice(0, 10)));
+          var r = el('div', 'row'), msg = el('span', 'small-note');
+          if (l.asked) { r.appendChild(el('span', 'badge', 'Asked')); }
+          else {
+            var b = el('button', 'btn small', 'Send review request'); b.type = 'button'; b.disabled = !d.link; if (!d.link) msg.textContent = 'Save your review link first.';
+            b.addEventListener('click', function () { b.disabled = true; msg.className = 'small-note'; msg.textContent = 'Sending...'; api('/reviews-ask', 'POST', { id: l.id, text: ta.value }).then(function (x) { l.asked = true; msg.className = 'ok'; msg.textContent = x.message; b.remove(); r.insertBefore(el('span', 'badge', 'Asked'), msg); }).catch(function (e) { msg.className = 'err'; msg.textContent = e.message; b.disabled = false; }); });
+            r.appendChild(b);
+          }
+          r.appendChild(msg); row.appendChild(r); list.appendChild(row);
+        });
+      }
+      renderLeads();
+
+      var c3 = el('section', 'card'); c3.appendChild(el('h2', '', '4. Reply to a review'));
+      c3.appendChild(el('p', 'small-note', 'Paste a review you received. Tello drafts a reply in your name for you to copy and post. Check it before posting.'));
+      var stars = 5, sr = el('div', 'row stars'), sb = [];
+      [1, 2, 3, 4, 5].forEach(function (n) { var x = el('button', '', n + (n === 1 ? ' star' : ' stars')); x.type = 'button'; x.setAttribute('aria-pressed', String(n === 5)); x.addEventListener('click', function () { stars = n; sb.forEach(function (y, i) { y.setAttribute('aria-pressed', String(i + 1 === n)); }); }); sb.push(x); sr.appendChild(x); });
+      c3.appendChild(sr);
+      var rl = el('label', '', 'The review'), rv = el('textarea'); rl.appendChild(rv); rl.style.marginTop = '.8rem'; c3.appendChild(rl);
+      var b3 = el('button', 'btn small', 'Draft a reply'), out = el('pre'), m3 = el('p', 'err'), cp = el('button', 'btn small ghost', 'Copy'); b3.type = 'button'; cp.type = 'button'; out.hidden = true; cp.style.display = 'none';
+      b3.addEventListener('click', function () { b3.disabled = true; m3.textContent = ''; api('/reviews-reply', 'POST', { review: rv.value, stars: stars }).then(function (x) { out.textContent = x.reply; out.hidden = false; cp.style.display = ''; }).catch(function (e) { m3.textContent = e.message; }).then(function () { b3.disabled = false; }); });
+      cp.addEventListener('click', function () { try { navigator.clipboard.writeText(out.textContent); cp.textContent = 'Copied'; } catch (e) {} });
+      var r3 = el('div', 'row'); r3.appendChild(b3); r3.appendChild(cp); c3.appendChild(r3); c3.appendChild(m3); c3.appendChild(out); app.appendChild(c3);
+      var back = el('p', 'small-note'), a = el('a', '', 'Back to my Tello page'); a.href = '/business/manage?t=' + encodeURIComponent(tok); back.appendChild(a); app.appendChild(back);
+    }
+    if (!tok) { app.textContent = ''; app.appendChild(el('p', 'err', 'Open this page from your private Tello link.')); return; }
+    api('/reviews', 'GET').then(render).catch(function (e) { app.textContent = ''; app.appendChild(el('p', 'err', e.message)); });
+  })();
+  </script>
+</body>
+</html>
