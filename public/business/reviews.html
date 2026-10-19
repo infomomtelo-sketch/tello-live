@@ -54,8 +54,10 @@
 <body>
   <header><div class="wrap"><a class="brand" href="/">tello<span>.live</span></a><span class="small-note" style="margin:0">Private page. Do not share this link.</span></div></header>
   <main class="wrap" id="app"><p class="small-note">Loading...</p></main>
+  <script src="/vendor/qrcode-generator/qrcode.js"></script>
   <script>
   (function () {
+    var welcome = new URLSearchParams(location.search).get('welcome') === '1';
     var tok = new URLSearchParams(location.search).get('t') || '', app = document.getElementById('app');
     function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
     function api(path, method, body) {
@@ -67,17 +69,53 @@
       app.textContent = '';
       var top = el('section'); top.appendChild(el('p', 'kick', 'Yellow Tello')); top.appendChild(el('h1', '', 'Reviews for ' + d.business));
       top.appendChild(el('p', 'lede', 'Ask finished customers for a review, and get a reply ready for reviews you receive. Nothing is sent until you tap Send.')); app.appendChild(top);
+      if (welcome) {
+        var w = el('div', 'note-ok'); w.appendChild(el('b', '', 'Yellow Tello is on. Get your first reviews today: '));
+        w.appendChild(document.createTextNode('save your review link, add customers you already have, then tap Ask everyone. Print the counter card too, so a happy customer in your shop can leave a review right away.'));
+        app.appendChild(w);
+        try { history.replaceState(null, '', '?t=' + encodeURIComponent(tok)); } catch (e) { /* the address stays as it is */ }
+      }
 
       var c1 = el('section', 'card'); c1.appendChild(el('h2', '', '1. Your review link'));
       c1.appendChild(el('p', 'small-note', 'In Google Business Profile, open Ask for reviews and copy the link. Any review page link starting with https:// works.'));
       var lab = el('label', '', 'Review link'), inp = el('input'); inp.type = 'url'; inp.placeholder = 'https://g.page/r/...'; inp.value = d.link || ''; lab.appendChild(inp); c1.appendChild(lab);
       var m1 = el('p', 'err'), b1 = el('button', 'btn small', 'Save link'); b1.type = 'button';
-      b1.addEventListener('click', function () { b1.disabled = true; m1.className = 'err'; m1.textContent = ''; api('/reviews-link', 'PUT', { link: inp.value }).then(function (r) { d.link = r.link; m1.className = 'ok'; m1.textContent = 'Saved.'; renderLeads(); }).catch(function (e) { m1.textContent = e.message; }).then(function () { b1.disabled = false; }); });
+      b1.addEventListener('click', function () { b1.disabled = true; m1.className = 'err'; m1.textContent = ''; api('/reviews-link', 'PUT', { link: inp.value }).then(function (r) { d.link = r.link; m1.className = 'ok'; m1.textContent = 'Saved.'; renderLeads(); renderCard(); }).catch(function (e) { m1.textContent = e.message; }).then(function () { b1.disabled = false; }); });
       c1.appendChild(b1); c1.appendChild(m1); app.appendChild(c1);
+
+      // A "Scan to review us" card for the counter: a QR code of the review link, to print or download.
+      var cq = el('section', 'card'); cq.appendChild(el('h2', '', 'Counter card'));
+      cq.appendChild(el('p', 'small-note', 'Put this by your register or on the receipt. A customer points their phone camera at it and lands on your review page.'));
+      var cqBody = el('div'); cq.appendChild(cqBody); app.appendChild(cq);
+      function renderCard() {
+        cqBody.textContent = '';
+        if (!d.link || typeof qrcode !== 'function') { cqBody.appendChild(el('p', 'small-note', 'Save your review link above and the card appears here.')); return; }
+        var q = qrcode(0, 'M'); q.addData(d.link); q.make();
+        var svg = q.createSvgTag({ cellSize: 6, margin: 2, scalable: true });
+        var pic = el('div'); pic.innerHTML = svg; pic.style.cssText = 'width:160px;height:160px;background:#fff;border-radius:10px;padding:6px';
+        pic.setAttribute('role', 'img'); pic.setAttribute('aria-label', 'QR code for your review page');
+        var row = el('div', 'row'), pr = el('button', 'btn small', 'Print the card'), dl = el('a', 'btn small ghost', 'Download QR code');
+        pr.type = 'button'; dl.download = 'review-qr.svg'; dl.href = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
+        pr.addEventListener('click', function () {
+          var esc = function (t) { return String(t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+          var wdw = window.open('', '_blank'); if (!wdw) return;
+          wdw.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Review card</title><style>body{font-family:system-ui,sans-serif;text-align:center;padding:2rem;color:#111}.c{border:2px solid #111;border-radius:18px;display:inline-block;padding:1.6rem 2rem;max-width:22rem}h1{font-size:1.5rem;margin:0 0 .3rem}p{margin:.3rem 0 1rem;font-size:1.05rem}.q{width:220px;height:220px;margin:0 auto}</style></head><body><div class="c"><h1>' + esc(d.business) + '</h1><p>Enjoyed your visit? Scan to leave us a review.</p><div class="q">' + svg + '</div><p style="font-size:.85rem;margin-top:1rem">Thank you</p></div><script>window.onload=function(){window.print()}<\/script></body></html>');
+          wdw.document.close();
+        });
+        row.appendChild(pr); row.appendChild(dl); cqBody.appendChild(pic); cqBody.appendChild(row);
+      }
+      renderCard();
 
       var c2 = el('section', 'card'); c2.appendChild(el('h2', '', '3. Ask for a review'));
       c2.appendChild(el('p', 'small-note', 'These are finished leads and customers you added, with an email address. Each customer is asked once. Replies come to you at your email.'));
       var tl = el('label', '', 'Message ({first name} is filled in for each customer)'), ta = el('textarea'); ta.value = d.ask_text; tl.appendChild(ta); c2.appendChild(tl);
+      var allRow = el('div', 'row'), allB = el('button', 'btn small', 'Ask everyone'), allM = el('span', 'small-note'); allB.type = 'button';
+      allB.addEventListener('click', function () {
+        allB.disabled = true; allM.className = 'small-note'; allM.textContent = 'Sending...';
+        api('/reviews-ask-all', 'POST', { text: ta.value }).then(function (x) { (x.asked || []).forEach(function (id) { d.leads.forEach(function (l) { if (l.id === id) l.asked = true; }); }); renderLeads(); allM.className = 'ok'; allM.textContent = x.message; })
+          .catch(function (e) { allM.className = 'err'; allM.textContent = e.message; renderLeads(); });
+      });
+      allRow.appendChild(allB); allRow.appendChild(allM); c2.appendChild(allRow);
       var list = el('div'); c2.appendChild(list); app.appendChild(c2);
       var c2b = el('section', 'card'); c2b.appendChild(el('h2', '', '2. Add customers you already have'));
       c2b.appendChild(el('p', 'small-note', 'One per line, name and email, for example: Maria Lopez, maria@example.com. Only add people who bought from you. Up to 50 at a time.'));
@@ -87,6 +125,9 @@
       c2b.appendChild(b2); c2b.appendChild(m2); app.insertBefore(c2b, c2);
       function renderLeads() {
         list.textContent = '';
+        var waiting = d.leads.filter(function (l) { return !l.asked; }).length;
+        allB.textContent = waiting ? 'Ask everyone (' + waiting + ')' : 'Ask everyone'; allB.disabled = !d.link || !waiting;
+        if (!d.link) allM.textContent = 'Save your review link first.';
         if (!d.leads.length) { list.appendChild(el('p', 'small-note', 'No finished leads with an email yet. Mark a lead done on your Tello page and it shows here.')); return; }
         d.leads.forEach(function (l) {
           var row = el('div', 'lead'), who = el('b', '', l.name || l.contact); row.appendChild(who); row.appendChild(el('small', '', l.contact + ' \u00b7 done ' + (l.done_at || '').slice(0, 10)));
