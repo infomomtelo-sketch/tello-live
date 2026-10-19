@@ -344,7 +344,7 @@ async function runFree(run: Run): Promise<Result> {
  *  "biz-<day>" in hub_spend with its own cap (BIZ_DAILY_CENTS, default 1000 = $10 a day across all businesses), so
  *  tello.live visitors and paying businesses never use up each other's budget. Returns "" when there is no key,
  *  the cap is reached or every model fails; the caller then falls back to Workers AI. */
-export interface ClaudeOpts { scope?: "biz" | "app"; model?: string }
+export interface ClaudeOpts { scope?: "biz" | "app"; model?: string; timeoutMs?: number }
 /** Which spend bucket a call counts under, its daily cap, and the models to try. "biz" is the business assistants, "app" is
  *  everything else inside EC Rental and the tello.live tools (APP_DAILY_CENTS, default 1500 = $15 a day). */
 function pick(env: HubEnv, o?: ClaudeOpts) {
@@ -357,7 +357,7 @@ export async function claudeReply(env: HubEnv, system: string, msgs: Msg[], maxT
   if (!env.ANTHROPIC_API_KEY) return "";
   const { day, cap, models, refusal } = pick(env, o);
   if ((await spentToday(env, day)) >= cap) return "";
-  const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY, baseURL: env.ANTHROPIC_BASE_URL || undefined, maxRetries: 0, timeout: 30_000 });
+  const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY, baseURL: env.ANTHROPIC_BASE_URL || undefined, maxRetries: 0, timeout: o?.timeoutMs ?? 30_000 });
   for (const model of models) {
     try {
       const msg: any = await client.beta.messages.create({

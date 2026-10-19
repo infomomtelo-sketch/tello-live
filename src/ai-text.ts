@@ -5,7 +5,7 @@ import { claudeReply, type HubEnv } from "./tello-hub";
 
 const FREE_TEXT_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 
-export async function textRun(env: any, payload: { messages: { role: string; content: string }[]; max_tokens?: number; temperature?: number }): Promise<{ response: string }> {
+export async function textRun(env: any, payload: { messages: { role: string; content: string }[]; max_tokens?: number; temperature?: number }, timeoutMs?: number): Promise<{ response: string }> {
   const system = payload.messages.filter((m) => m.role === "system").map((m) => m.content).join("\n\n") || "You are a helpful assistant.";
   const turns: { role: "user" | "assistant"; content: string }[] = [];
   for (const m of payload.messages) {
@@ -15,9 +15,11 @@ export async function textRun(env: any, payload: { messages: { role: string; con
   }
   while (turns.length && turns[0].role !== "user") turns.shift();
   if (turns.length) {
-    const text = await claudeReply(env as HubEnv, system, turns, payload.max_tokens ?? 600, { scope: "app" });
+    const text = await claudeReply(env as HubEnv, system, turns, payload.max_tokens ?? 600, { scope: "app", timeoutMs });
     if (text) return { response: text };
   }
   const out: any = await env.AI.run(FREE_TEXT_MODEL, payload as any);
-  return { response: String(out?.response ?? "") };
+  // Workers AI hands back a parsed object when the model answers in JSON; keep it as JSON text, not "[object Object]".
+  const r = out?.response;
+  return { response: r && typeof r === "object" ? JSON.stringify(r) : String(r ?? "") };
 }
