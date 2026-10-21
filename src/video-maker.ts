@@ -175,7 +175,7 @@ function parseAi(out) {
 async function askAi(env, messages, page, current, pageNote, prefs) {
   const chat = [{ role: 'system', content: SYSTEM + context(page, current, pageNote, prefs) }, ...messages];
   for (let attempt = 0; attempt < 2; attempt++) {
-    const out = await textRun(env, { messages: attempt ? [...chat, { role: 'user', content: 'Return only the JSON object, nothing else.' }] : chat, max_tokens: 1400, temperature: 0.5 });
+    const out = await textRun(env, { messages: attempt ? [...chat, { role: 'user', content: 'Return only the JSON object, nothing else.' }] : chat, max_tokens: 1400, temperature: 0.5 }, 60_000); // a whole video script can take Claude longer than the usual 30 seconds
     const parsed = parseAi(out);
     if (parsed && parsed.video) return parsed;
   }
