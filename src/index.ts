@@ -5,6 +5,7 @@
 import { type HubEnv } from "./tello-hub";
 import { handleVideoMaker } from "./video-maker";
 import { handleVideoRequest } from "./video-request";
+import { handleVideoPay } from "./video-pay";
 import { handleBizBots, handleBotStripeEvent } from "./biz-bots";
 import { ensureAnyWebhook, handleStripeWebhook, type BillingEnv } from "./billing";
 import { runGreenBriefings } from "./biz-green";
@@ -103,6 +104,8 @@ export default {
         if (biz) return biz;
         const video = await handleVideoRequest(request, env, url, allow, notify);
         if (video) return video;
+        const pay = await handleVideoPay(request, env, url, allow, notify);
+        if (pay) return pay;
         const maker = await handleVideoMaker(request, env, url);
         if (maker) return maker;
       } catch (err) {
