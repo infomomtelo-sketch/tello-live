@@ -298,7 +298,7 @@
       if (!billing) return;
       if (billing === 'canceled') say('No problem, you were not charged.');
       else if (billing === 'yellow') {
-        if (data.yellow_on) say('Yellow Tello is on. Open Reviews below to ask your customers for reviews.');
+        if (data.yellow_on) { location.replace('/business/reviews?t=' + encodeURIComponent(tok) + '&welcome=1'); return; }
         else if (tries++ < 5) { say('Confirming your payment...'); setTimeout(load, 2500); return; }
         else say('Your payment is still being confirmed. Please refresh in a minute before trying again.');
       }

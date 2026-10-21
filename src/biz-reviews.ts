@@ -63,25 +63,44 @@ export async function handleReviews(env: ReviewEnv, bot: ReviewBot, sub: string,
     return json({ success: true, added, skipped });
   }
 
-  if (sub === "/reviews-ask" && method === "POST") {
+  if ((sub === "/reviews-ask" || sub === "/reviews-ask-all") && method === "POST") {
     const link = (await env.DB.prepare("SELECT value FROM app_settings WHERE key = ?").bind(linkKey(bot.id)).first<{ value: string }>())?.value || "";
     if (!link) return json({ error: "Save your review link first." }, 400);
-    const id = Number(body.id);
-    const lead = (await doneLeads(env, bot.id)).find((l) => l.id === id);
-    if (!lead) return json({ error: "Only finished leads with an email address can be asked for a review." }, 400);
-    if (lead.asked) return json({ error: "This customer was already asked for a review." }, 409);
     if (!notify) return json({ error: "Email is not available right now." }, 503);
-    const now = new Date(), day = "mail-" + now.toISOString().slice(0, 10);
-    const used = (await env.DB.prepare("SELECT n FROM biz_usage WHERE bot_id = ? AND day = ?").bind(bot.id, day).first<{ n: number }>())?.n ?? 0;
-    if (used >= EMAILS_PER_DAY) return json({ error: `You can send ${EMAILS_PER_DAY} emails a day from Tello. Try again tomorrow.` }, 429);
-    const text = noEmoji(lines(body.text, 1200)) || defaultAsk(bot.business, firstName(lead.name));
-    const msg = text.replace(/\{first name\}/g, firstName(lead.name));
-    const foot = `Sent by Tello for ${bot.business}. Reply to this email to reach ${bot.business}.`;
-    const html = `${msg.split("\n").map((p) => `<p>${esc(p) || "&nbsp;"}</p>`).join("")}<p><a href="${esc(link)}" style="display:inline-block;background:#123a30;color:#fff;padding:10px 18px;border-radius:999px;text-decoration:none;font-weight:700">Leave a review</a></p><p style="color:#666;font-size:12px">${esc(foot)}</p>`;
-    await notify(lead.contact.trim(), `How did we do? A quick review for ${bot.business}`, html, `${msg}\n\nLeave a review: ${link}\n\n--\n${foot}`, bot.owner_email);
-    await env.DB.prepare("INSERT INTO biz_usage (bot_id, day, n) VALUES (?, ?, 1) ON CONFLICT(bot_id, day) DO UPDATE SET n = n + 1").bind(bot.id, day).run();
-    await env.DB.prepare("INSERT OR IGNORE INTO biz_usage (bot_id, day, n) VALUES (?, ?, 1)").bind(bot.id, "rev-" + lead.id).run();
-    return json({ success: true, message: `Review request sent to ${lead.contact.trim()}.` });
+    const leads = await doneLeads(env, bot.id), day = "mail-" + new Date().toISOString().slice(0, 10);
+    let used = (await env.DB.prepare("SELECT n FROM biz_usage WHERE bot_id = ? AND day = ?").bind(bot.id, day).first<{ n: number }>())?.n ?? 0;
+    const send = async (lead: DoneLead) => {
+      const text = noEmoji(lines(body.text, 1200)) || defaultAsk(bot.business, firstName(lead.name));
+      const msg = text.replace(/\{first name\}/g, firstName(lead.name));
+      const foot = `Sent by Tello for ${bot.business}. Reply to this email to reach ${bot.business}.`;
+      const html = `${msg.split("\n").map((p) => `<p>${esc(p) || "&nbsp;"}</p>`).join("")}<p><a href="${esc(link)}" style="display:inline-block;background:#123a30;color:#fff;padding:10px 18px;border-radius:999px;text-decoration:none;font-weight:700">Leave a review</a></p><p style="color:#666;font-size:12px">${esc(foot)}</p>`;
+      await notify(lead.contact.trim(), `How did we do? A quick review for ${bot.business}`, html, `${msg}\n\nLeave a review: ${link}\n\n--\n${foot}`, bot.owner_email);
+      await env.DB.prepare("INSERT INTO biz_usage (bot_id, day, n) VALUES (?, ?, 1) ON CONFLICT(bot_id, day) DO UPDATE SET n = n + 1").bind(bot.id, day).run();
+      await env.DB.prepare("INSERT OR IGNORE INTO biz_usage (bot_id, day, n) VALUES (?, ?, 1)").bind(bot.id, "rev-" + lead.id).run();
+      used++;
+    };
+    const full = `You can send ${EMAILS_PER_DAY} emails a day from Tello. Try again tomorrow.`;
+
+    if (sub === "/reviews-ask") {
+      const lead = leads.find((l) => l.id === Number(body.id));
+      if (!lead) return json({ error: "Only finished leads with an email address can be asked for a review." }, 400);
+      if (lead.asked) return json({ error: "This customer was already asked for a review." }, 409);
+      if (used >= EMAILS_PER_DAY) return json({ error: full }, 429);
+      await send(lead);
+      return json({ success: true, message: `Review request sent to ${lead.contact.trim()}.` });
+    }
+
+    // Everyone not asked yet, oldest finished first so a new owner's whole list goes out over a few days.
+    const todo = leads.filter((l) => !l.asked).reverse();
+    if (!todo.length) return json({ error: "Everyone on your list has already been asked. Add more customers above." }, 400);
+    if (used >= EMAILS_PER_DAY) return json({ error: full }, 429);
+    const asked: number[] = [];
+    for (const lead of todo) {
+      if (used >= EMAILS_PER_DAY) break;
+      try { await send(lead); asked.push(lead.id); } catch (err) { console.error("[reviews-ask-all]", err instanceof Error ? err.message : err); break; }
+    }
+    const left = todo.length - asked.length;
+    return json({ success: true, asked, left, message: `Review requests sent to ${asked.length} ${asked.length === 1 ? "customer" : "customers"}.` + (left ? ` ${left} more go out when you tap again tomorrow (${EMAILS_PER_DAY} a day).` : "") });
   }
 
   if (sub === "/reviews-reply" && method === "POST") {
