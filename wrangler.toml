@@ -21,7 +21,7 @@ binding = "AI"
 directory = "./public"
 binding = "ASSETS"
 not_found_handling = "404-page"
-run_worker_first = ["/", "/api/*", "/embed/*", "/media/*", "/b/*", "/build", "/business.html", "/privacy", "/terms"]
+run_worker_first = ["/", "/api/*", "/embed/*", "/media/*", "/v/*", "/b/*", "/build", "/business.html", "/privacy", "/terms"]
 
 # The same database the ec-rental Worker uses, so every business assistant, lead and Green Tello subscription carries
 # over with nothing to migrate. Its Tello tables (biz_*, hub_*) move to a database of their own in a later step.
