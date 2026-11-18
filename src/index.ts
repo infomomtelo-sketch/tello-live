@@ -4,6 +4,7 @@
  */
 import { type HubEnv } from "./tello-hub";
 import { handleVideoMaker } from "./video-maker";
+import { handleVideoSharePost, handleVideoShareGet } from "./video-share";
 import { handleVideoRequest } from "./video-request";
 import { handleVideoPay } from "./video-pay";
 import { handleBizBots, handleBotStripeEvent } from "./biz-bots";
@@ -69,6 +70,8 @@ export default {
     if (get && LEGAL[url.pathname]) return Response.redirect(LEGAL[url.pathname], 302);
     if (get && (url.pathname === "/ask" || url.pathname === "/hub" || url.pathname === "/hub.html")) { url.pathname = "/"; return Response.redirect(url.toString(), 301); }
     if (url.pathname.startsWith("/media/")) { const m = await handleMedia(request, env, url); if (m) return m; }
+    // Shared videos: /v/<key>.mp4 from R2, Range support (see video-share.ts).
+    if (get && url.pathname.startsWith("/v/")) { const v = await handleVideoShareGet(request, env, url); if (v) return v; }
     // Business pages: the hosted chat for one business is /b/<id>, served by the same static page for every id.
     if (get && /^\/b\/[a-f0-9]{10}$/.test(url.pathname)) return env.ASSETS.fetch(new Request(new URL("/b", url).toString(), request));
     if (get && url.pathname === "/business.html") { url.pathname = "/business"; return Response.redirect(url.toString(), 301); }
@@ -108,6 +111,8 @@ export default {
         if (pay) return pay;
         const maker = await handleVideoMaker(request, env, url);
         if (maker) return maker;
+        const share = await handleVideoSharePost(request, env, url);
+        if (share) return share;
       } catch (err) {
         console.error("[api]", err instanceof Error ? err.message : err);
         return json({ error: "Something went wrong. Please try again." }, 500);

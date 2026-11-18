@@ -18,6 +18,7 @@
   <meta name="twitter:card" content="summary_large_image" />
 <meta name="theme-color" content="#0a1628">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 :root { --deep:#0a1628; --text:#e8e0d0; --text2:#c2b4a0; --text3:#9a8c7c; --amber:#d4905a; --amber2:#e8a870; --line:rgba(212,144,90,0.25); --panel:rgba(8,16,28,0.72); --err:#ff8a7a; }
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -317,6 +318,542 @@ function buildVideoHtml(cfg) {
 }
 
 
+/* ───────────────────────── MP4 recording ─────────────────────────
+   Records the current video to a real video file, in the browser. The scenes
+   are drawn on a canvas with the same layout, colours and words as the
+   player, while the recorded narration plays through an AudioContext into
+   the recording. No server render, no account, no payment.
+   The file is an MP4 where the browser can record one (Safari, Chrome);
+   otherwise WebM, and the button says so. A scene whose voice recording
+   failed records silent. Keep this in step with PLAYER_CSS / playerMain:
+   same sizes, same colours, same words. */
+var recBusy = false, recCache = null;
+
+function recMime() {
+  if (!window.MediaRecorder) return null;
+  var list = ['video/mp4', 'video/mp4;codecs="avc1.42E01E,mp4a.40.2"', 'video/webm;codecs=vp9,opus', 'video/webm'];
+  for (var i = 0; i < list.length; i++) {
+    try { if (MediaRecorder.isTypeSupported(list[i])) return { mime: list[i], ext: list[i].indexOf('mp4') >= 0 ? 'mp4' : 'webm' }; } catch (e) {}
+  }
+  return { mime: '', ext: 'webm' };
+}
+function recClamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+function recEase(p) { p = recClamp(p, 0, 1); return 1 - Math.pow(1 - p, 3); }
+function recRR(x, px, py, w, h, r) {
+  var q = Array.isArray(r) ? r : [r, r, r, r];
+  x.beginPath();
+  x.moveTo(px + q[0], py);
+  x.lineTo(px + w - q[1], py); x.quadraticCurveTo(px + w, py, px + w, py + q[1]);
+  x.lineTo(px + w, py + h - q[2]); x.quadraticCurveTo(px + w, py + h, px + w - q[2], py + h);
+  x.lineTo(px + q[3], py + h); x.quadraticCurveTo(px, py + h, px, py + h - q[3]);
+  x.lineTo(px, py + q[0]); x.quadraticCurveTo(px, py, px + q[0], py);
+  x.closePath();
+}
+function recWrap(x, text, maxW) {
+  var words = String(text || '').split(/\s+/).filter(Boolean), lines = [], cur = '';
+  for (var i = 0; i < words.length; i++) {
+    var t = cur ? cur + ' ' + words[i] : words[i];
+    if (!cur || x.measureText(t).width <= maxW) cur = t;
+    else { lines.push(cur); cur = words[i]; }
+  }
+  if (cur) lines.push(cur);
+  return lines;
+}
+function recFont(x, weight, size) { x.font = weight + ' ' + size + 'px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif'; }
+function recLetter(x, v) { try { x.letterSpacing = v; } catch (e) {} }
+function recHeadSize(lay) {
+  if (lay.style === 'slides') return lay.tall ? 78 : 88;
+  if (lay.style === 'animation') return lay.tall ? 88 : 100;
+  return lay.tall ? 68 : 76;
+}
+function recTimings(cfg, durs) {
+  var starts = [], t = 0;
+  for (var i = 0; i < cfg.scenes.length; i++) { starts.push(t); t += durs[i] + 0.45; }
+  return { starts: starts, total: t };
+}
+function recSceneAt(tim, t) {
+  var i = tim.starts.length - 1;
+  while (i > 0 && tim.starts[i] > t) i--;
+  return { i: i, local: t - tim.starts[i] };
+}
+// Lay the head words out into centred lines (animation style pops words in one by one).
+function recWordLayout(x, text, maxW, size) {
+  recFont(x, 800, size); recLetter(x, (-size * 0.02) + 'px');
+  var words = String(text || '').split(/\s+/).filter(Boolean), lines = [], cur = [], curW = 0, space = x.measureText(' ').width;
+  words.forEach(function (w) {
+    var ww = x.measureText(w).width;
+    if (cur.length && curW + space + ww > maxW) { lines.push(cur); cur = []; curW = 0; }
+    if (cur.length) curW += space;
+    cur.push({ w: w, width: ww }); curW += ww;
+  });
+  if (cur.length) lines.push(cur);
+  return { lines: lines, lh: size * 1.05 };
+}
+function recCopyLines(x, cfg, lay, s, ow) {
+  // Measure the copy block (kick, head, sub, pill, credit). Returns heights; draws nothing.
+  var headSize = recHeadSize(lay), parts = { headSize: headSize, kickH: 0, head: [], sub: [], pillH: 0, creditH: 0 };
+  if (s.kick) parts.kickH = lay.style === 'tello' ? 42 + 26 : 26 + 22;
+  if (lay.style === 'animation') {
+    var wl = recWordLayout(x, s.head, ow, headSize);
+    parts.head = wl.lines; parts.headLh = wl.lh; parts.headH = wl.lines.length * wl.lh;
+  } else {
+    recFont(x, 800, headSize); recLetter(x, (-headSize * 0.02) + 'px');
+    parts.head = recWrap(x, s.head, ow); parts.headLh = headSize * 1.05; parts.headH = parts.head.length * parts.headLh;
+  }
+  recLetter(x, '0px');
+  if (s.sub) {
+    var subSize = lay.style === 'slides' ? 38 : 32;
+    recFont(x, 400, subSize);
+    parts.sub = recWrap(x, s.sub, lay.style === 'slides' ? Math.min(ow, 900) : ow);
+    parts.subSize = subSize; parts.subLh = subSize * 1.35; parts.subH = 24 + parts.sub.length * parts.subLh;
+  }
+  if (s.pill) parts.pillH = 30 + 56;
+  if (s.kind === 'end' && cfg.credit) parts.creditH = 34 + 22;
+  parts.h = parts.kickH + parts.headH + (parts.subH || 0) + parts.pillH + parts.creditH;
+  return parts;
+}
+function recDrawCopy(x, cfg, lay, s, ox, oy, ow, align, t, content) {
+  var L = lay.L, y = oy, cx = align === 'center' ? ox + ow / 2 : ox;
+  var parts = recCopyLines(x, cfg, lay, s, ow);
+  x.textBaseline = 'alphabetic';
+  if (s.kick) {
+    if (lay.style === 'tello') {
+      recFont(x, 700, 22); recLetter(x, '3px');
+      var kw = x.measureText(s.kick.toUpperCase()).width + 44;
+      var kx = align === 'center' ? cx - kw / 2 : ox;
+      x.fillStyle = L.accent; recRR(x, kx, y, kw, 42, 21); x.fill();
+      x.fillStyle = L.accentInk; x.textAlign = align === 'center' ? 'center' : 'left'; x.textBaseline = 'middle';
+      x.fillText(s.kick.toUpperCase(), align === 'center' ? cx : ox + 22, y + 22);
+      x.textBaseline = 'alphabetic';
+      y += 42 + 26;
+    } else {
+      recFont(x, 700, 26); recLetter(x, '5px');
+      x.fillStyle = L.accent; x.textAlign = align === 'center' ? 'center' : 'left';
+      x.fillText(s.kick.toUpperCase(), cx, y + 26);
+      y += 26 + 22;
+    }
+    recLetter(x, '0px');
+  }
+  // head
+  var headSize = parts.headSize;
+  recFont(x, 800, headSize); recLetter(x, (-headSize * 0.02) + 'px');
+  x.fillStyle = L.ink; x.textAlign = align === 'center' ? 'center' : 'left';
+  if (lay.style === 'animation') {
+    var wl = parts.head, lh = parts.headLh, wi = 0;
+    wl.forEach(function (line) {
+      var lineW = 0;
+      line.forEach(function (wd, k) { lineW += wd.width + (k ? x.measureText(' ').width : 0); });
+      var wx = align === 'center' ? cx - lineW / 2 : ox, wy = y + lh * 0.9;
+      line.forEach(function (wd) {
+        var e = recEase((t - (0.15 + wi * 0.12)) / 0.55); wi++;
+        if (e <= 0) { wx += wd.width + x.measureText(' ').width; return; }
+        x.save();
+        x.globalAlpha = e;
+        x.translate(wx + wd.width / 2, wy - headSize * 0.4);
+        var sc = 0.88 + 0.12 * e;
+        x.scale(sc, sc);
+        x.translate(0, 46 * (1 - e));
+        x.fillText(wd.w, -wd.width / 2, headSize * 0.4);
+        x.restore();
+        wx += wd.width + x.measureText(' ').width;
+      });
+      y += lh;
+    });
+  } else {
+    parts.head.forEach(function (line) { x.fillText(line, cx, y + headSize); y += parts.headLh; });
+  }
+  recLetter(x, '0px');
+  // sub
+  if (s.sub) {
+    y += 24;
+    recFont(x, 400, parts.subSize);
+    x.fillStyle = L.muted; x.textAlign = align === 'center' ? 'center' : 'left';
+    parts.sub.forEach(function (line) { x.fillText(line, cx, y + parts.subSize); y += parts.subLh; });
+  }
+  // pill
+  if (s.pill) {
+    y += 30;
+    recFont(x, 800, 32);
+    var pw = x.measureText(s.pill).width + 52;
+    var px = align === 'center' ? cx - pw / 2 : ox;
+    x.fillStyle = L.accent; recRR(x, px, y, pw, 56, 28); x.fill();
+    x.fillStyle = L.accentInk; x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.fillText(s.pill, px + pw / 2, y + 29);
+    x.textBaseline = 'alphabetic';
+    y += 56;
+  }
+  // credit (end scene only)
+  if (s.kind === 'end' && cfg.credit) {
+    y += 34;
+    recFont(x, 400, 22); recLetter(x, '1px');
+    x.fillStyle = L.muted; x.textAlign = align === 'center' ? 'center' : 'left';
+    x.fillText('Made with tello.live', cx, y + 22);
+    recLetter(x, '0px');
+  }
+  return y;
+}
+function recDrawPhone(x, cfg, lay, s, px, py, pw, ph, t, content, imgs) {
+  var L = lay.L;
+  x.fillStyle = '#0b0f14'; recRR(x, px, py, pw, ph, 54); x.fill();
+  var sx = px + 14, sy = py + 14, sw = pw - 28, sh = ph - 28;
+  x.save(); recRR(x, sx, sy, sw, sh, 42); x.clip();
+  x.fillStyle = '#f8f4ec'; x.fillRect(sx, sy, sw, sh);
+  // app bar
+  x.fillStyle = L.accent; x.fillRect(sx, sy, sw, 64);
+  x.fillStyle = L.accentInk; x.beginPath(); x.arc(sx + 29, sy + 32, 7, 0, 7); x.fill();
+  recFont(x, 700, 20); x.fillStyle = L.accentInk; x.textAlign = 'left'; x.textBaseline = 'middle';
+  var pname = cfg.product || '', maxPn = sw - 60;
+  while (pname.length > 1 && x.measureText(pname).width > maxPn) pname = pname.slice(0, -1);
+  if (pname !== (cfg.product || '')) pname = pname.slice(0, -1) + '…';
+  x.fillText(pname, sx + 48, sy + 33);
+  x.textBaseline = 'alphabetic';
+  var bx = sx, by = sy + 64, bw = sw, bh = sh - 64;
+  var img = s.img ? imgs[s.img] : null;
+  if (s.kind === 'step' && img) {
+    // full-bleed photo with a slow zoom, step chip and title caption
+    var zoom = 1 + 0.08 * recClamp(t / 14, 0, 1);
+    var iw = img.width, ih = img.height, sc = Math.max(bw / iw, bh / ih) * zoom;
+    var dw = iw * sc, dh = ih * sc;
+    x.drawImage(img, bx + (bw - dw) / 2, by + (bh - dh) / 2, dw, dh);
+    recFont(x, 700, 16);
+    var chipT = 'Step ' + s.n + ' of ' + cfg.steps, cw = x.measureText(chipT).width + 28;
+    x.fillStyle = '#eef3ef'; recRR(x, sx + 18, sy + 84, cw, 28, 14); x.fill();
+    x.fillStyle = '#2b4a3c'; x.textAlign = 'left'; x.textBaseline = 'middle';
+    x.fillText(chipT, sx + 32, sy + 99);
+    recFont(x, 700, 20);
+    var capLines = recWrap(x, s.title || '', bw - 28);
+    var capH = capLines.length * 27 + 24;
+    x.fillStyle = 'rgba(10,20,30,.82)'; recRR(x, sx + 14, sy + sh - 16 - capH, bw - 28, capH, 14); x.fill();
+    x.fillStyle = '#ffffff'; x.textAlign = 'left'; x.textBaseline = 'alphabetic';
+    var cy2 = sy + sh - 16 - capH + 26;
+    capLines.forEach(function (ln) { x.fillText(ln, sx + 28, cy2); cy2 += 27; });
+    x.restore();
+    return;
+  }
+  // text screen body
+  var cx2 = bx + 22, cw2 = bw - 44, cy3 = by + 20;
+  function chip(text) {
+    recFont(x, 700, 16);
+    var w = x.measureText(text).width + 28;
+    x.fillStyle = '#eef3ef'; recRR(x, cx2, cy3, w, 28, 14); x.fill();
+    x.fillStyle = '#2b4a3c'; x.textAlign = 'left'; x.textBaseline = 'middle';
+    x.fillText(text, cx2 + 14, cy3 + 15);
+    x.textBaseline = 'alphabetic';
+    cy3 += 28 + 14;
+  }
+  function rows(titles, checks, stagger, base) {
+    titles.forEach(function (title, k) {
+      var e = recEase((t - (base + k * stagger)) / 0.5);
+      if (e <= 0) return;
+      var rh = 50, ry = cy3;
+      x.save(); x.globalAlpha = e; x.translate(16 * (1 - e), 0);
+      x.fillStyle = '#ffffff'; recRR(x, cx2, ry, cw2, rh, 14); x.fill();
+      var ccx = cx2 + 14 + 15, ccy = ry + 25;
+      x.fillStyle = checks ? '#1a7f4b' : L.accent;
+      x.beginPath(); x.arc(ccx, ccy, 15, 0, 7); x.fill();
+      if (checks) {
+        x.strokeStyle = '#ffffff'; x.lineWidth = 3; x.lineCap = 'round'; x.lineJoin = 'round';
+        x.beginPath(); x.moveTo(ccx - 6, ccy); x.lineTo(ccx - 2, ccy + 5); x.lineTo(ccx + 6, ccy - 5); x.stroke();
+      } else {
+        recFont(x, 800, 16); x.fillStyle = L.accentInk; x.textAlign = 'center'; x.textBaseline = 'middle';
+        x.fillText(String(k + 1), ccx, ccy + 1); x.textBaseline = 'alphabetic';
+      }
+      recFont(x, 600, 18); x.fillStyle = '#13261f'; x.textAlign = 'left'; x.textBaseline = 'middle';
+      var tt = title, maxT = cw2 - 60;
+      while (tt.length > 1 && x.measureText(tt).width > maxT) tt = tt.slice(0, -1);
+      if (tt !== title) tt = tt.slice(0, -1) + '…';
+      x.fillText(tt, cx2 + 56, ccy + 1);
+      x.textBaseline = 'alphabetic';
+      x.restore();
+      cy3 += rh + 14;
+    });
+  }
+  if (s.kind === 'hook') {
+    if (img) {
+      x.save(); recRR(x, cx2, cy3, cw2, 128, 16); x.clip();
+      var sc2 = Math.max(cw2 / img.width, 128 / img.height);
+      x.drawImage(img, cx2 + (cw2 - img.width * sc2) / 2, cy3 + (128 - img.height * sc2) / 2, img.width * sc2, img.height * sc2);
+      x.restore();
+      cy3 += 128 + 14;
+    }
+    chip('New');
+    recFont(x, 800, 32); x.fillStyle = '#13261f'; x.textAlign = 'left';
+    recWrap(x, cfg.feature, cw2).forEach(function (ln) { x.fillText(ln, cx2, cy3 + 32); cy3 += 36; });
+    cy3 += 4;
+    recFont(x, 700, 15); recLetter(x, '2px'); x.fillStyle = '#6b7a72';
+    x.fillText('IN THIS VIDEO', cx2, cy3 + 15); recLetter(x, '0px');
+    cy3 += 15 + 14;
+    rows(cfg.stepTitles, false, 0.45, 0.5);
+  } else if (s.kind === 'step') {
+    chip('Step ' + s.n + ' of ' + cfg.steps);
+    // typed bubble: the step's own line, typed like a chat reply
+    var detail = s.detail || (function () { var m = String(s.say || '').match(/^[^.!?]+[.!?]?/); return m ? m[0].trim() : (s.title || ''); })();
+    recFont(x, 500, 21);
+    var blines = recWrap(x, detail, cw2 - 32);
+    var bh2 = Math.max(92, blines.length * 29 + 28);
+    x.fillStyle = '#ffffff'; recRR(x, cx2, cy3, cw2, bh2, [18, 18, 18, 6]); x.fill();
+    var chars = Math.floor(detail.length * recClamp(t / (content * 0.45), 0, 1));
+    var typed = detail.slice(0, chars);
+    x.fillStyle = '#1b2b25'; x.textAlign = 'left';
+    var ty = cy3 + 14 + 21;
+    recWrap(x, typed, cw2 - 32).forEach(function (ln) { x.fillText(ln, cx2 + 16, ty); ty += 29; });
+    cy3 += bh2 + 14;
+    // button, pushed to the bottom of the body
+    var btnH = 56, btnY = by + bh - 14 - 44 - btnH;
+    var tapAt = Math.min(content * 0.62, 4.2), tapE = recEase((t - tapAt) / 0.5) * (1 - recEase((t - tapAt - 0.5) / 0.5));
+    x.save();
+    x.translate(cx2 + cw2 / 2, btnY + btnH / 2); x.scale(1 - 0.015 * tapE, 1 - 0.015 * tapE); x.translate(-(cx2 + cw2 / 2), -(btnY + btnH / 2));
+    x.fillStyle = L.accent; recRR(x, cx2, btnY, cw2, btnH, 16); x.fill();
+    recFont(x, 800, 20); x.fillStyle = L.accentInk; x.textAlign = 'left'; x.textBaseline = 'middle';
+    x.fillText(s.title || '', cx2 + 18, btnY + btnH / 2 + 1);
+    x.strokeStyle = L.accentInk; x.lineWidth = 3; x.lineCap = 'round'; x.lineJoin = 'round';
+    var ax = cx2 + cw2 - 30;
+    x.beginPath(); x.moveTo(ax - 8, btnY + btnH / 2); x.lineTo(ax + 6, btnY + btnH / 2); x.moveTo(ax - 1, btnY + btnH / 2 - 7); x.lineTo(ax + 6, btnY + btnH / 2); x.lineTo(ax - 1, btnY + btnH / 2 + 7); x.stroke();
+    x.textBaseline = 'alphabetic';
+    x.restore();
+    // dots
+    var dotsY = by + bh - 14 - 22;
+    var dotsW = cfg.steps * 18 - 8, dx0 = cx2 + (cw2 - dotsW) / 2;
+    for (var d = 0; d < cfg.steps; d++) {
+      x.fillStyle = d < s.n ? L.accent : '#d6ddd9';
+      x.beginPath(); x.arc(dx0 + d * 18 + 5, dotsY, 5, 0, 7); x.fill();
+    }
+  } else {
+    chip('Done');
+    rows(cfg.stepTitles, true, 0.3, 0.2);
+  }
+  x.restore();
+}
+function recDraw(x, cfg, lay, t, tim, imgs, durs) {
+  var W = lay.W, H = lay.H, L = lay.L, tall = lay.tall, style = lay.style;
+  var sc = recSceneAt(tim, t), i = sc.i, s = cfg.scenes[i], n = cfg.scenes.length;
+  var dur = durs[i], local = sc.local, content = Math.max(0.5, dur - 0.45);
+  var ang = 160 * Math.PI / 180, dx = Math.sin(ang), dy = -Math.cos(ang);
+  var cx0 = W / 2, cy0 = H / 2, len = Math.sqrt(W * W + H * H) / 2;
+  var g = x.createLinearGradient(cx0 - dx * len, cy0 - dy * len, cx0 + dx * len, cy0 + dy * len);
+  g.addColorStop(0, L.bg1); g.addColorStop(1, L.bg2);
+  x.fillStyle = g; x.fillRect(0, 0, W, H);
+  x.textBaseline = 'alphabetic';
+  if (style === 'animation') {
+    var blobs = [
+      { cx: 90, cy: 70, r: 220, c: L.accent, a: 0.26, ax: 70, ay: 50, per: 9 },
+      { cx: W - 70, cy: H - 250, r: 160, c: '#ffffff', a: 0.11, ax: -60, ay: -45, per: 11 },
+      { cx: W - 325, cy: 165, r: 85, c: L.accent, a: 0.26, ax: -60, ay: -45, per: 7 }
+    ];
+    blobs.forEach(function (b) {
+      x.save(); x.globalAlpha = b.a; x.fillStyle = b.c;
+      x.beginPath(); x.arc(b.cx + Math.sin(t * 2 * Math.PI / b.per) * b.ax, b.cy + Math.sin(t * 2 * Math.PI / b.per + 1) * b.ay, b.r, 0, 7); x.fill();
+      x.restore();
+    });
+  }
+  if (style === 'tello') {
+    var BUB = [[5, 10, 30, 9], [22, 78, 22, 11], [41, 20, 16, 8], [58, 86, 26, 12], [70, 8, 20, 10], [86, 52, 34, 9], [12, 46, 14, 13], [93, 90, 18, 7]];
+    BUB.forEach(function (b) {
+      x.save(); x.globalAlpha = 0.07; x.fillStyle = L.ink;
+      x.beginPath(); x.arc(b[0] / 100 * W + Math.sin(t * 2 * Math.PI / b[3]) * -30, b[1] / 100 * H + Math.sin(t * 2 * Math.PI / b[3] + 1) * -22, b[2] / 2, 0, 7); x.fill();
+      x.restore();
+    });
+  }
+  if (style === 'slides') {
+    // accent bar + big step number
+    x.fillStyle = L.accent; x.fillRect(0, 0, 22, H);
+    if (s.kind === 'step') {
+      recFont(x, 900, tall ? 300 : 340);
+      x.fillStyle = L.accent; x.globalAlpha = 0.14; x.textAlign = 'right';
+      x.fillText((s.n < 10 ? '0' : '') + s.n, W - 60, H - (tall ? 150 : 50));
+      x.globalAlpha = 1; x.textAlign = 'left';
+    }
+    var ow = W - (tall ? 170 : 280), ox = tall ? 100 : 150, padB = tall ? 170 : 90;
+    var parts = recCopyLines(x, cfg, lay, s, ow);
+    var oy = (H - padB - parts.h) / 2;
+    var dy = 28 * (1 - recEase(local / 0.7));
+    recDrawCopy(x, cfg, lay, s, ox, oy + dy, ow, 'left', local, content);
+  } else if (style === 'animation') {
+    var ow2 = W - 220, ox2 = 110, padB2 = 80;
+    var parts2 = recCopyLines(x, cfg, lay, s, ow2);
+    var oy2 = (H - padB2 - parts2.h) / 2;
+    recDrawCopy(x, cfg, lay, s, ox2, oy2, ow2, 'center', local, content);
+  } else {
+    // tello: copy + phone
+    var cdy = 28 * (1 - recEase(local / 0.7));
+    if (tall) recDrawCopy(x, cfg, lay, s, 60, 84 + cdy, 600, 'left', local, content);
+    else recDrawCopy(x, cfg, lay, s, 84, 150 + cdy, 600, 'left', local, content);
+    var pdy = 70 * (1 - recEase((local - 0.15) / 0.8));
+    if (tall) recDrawPhone(x, cfg, lay, s, 185, 500 + pdy, 350, 610, local, content, imgs);
+    else recDrawPhone(x, cfg, lay, s, 800, 50 + pdy, 356, 620, local, content, imgs);
+  }
+  // caption
+  var capLines = [], capFont = 24;
+  recFont(x, 600, capFont);
+  var capW = tall ? W - 80 : 640;
+  capLines = recWrap(x, s.say, capW);
+  var capLh = Math.round(capFont * 1.35), capH = Math.min(150, capLines.length * capLh + 24);
+  var capX = tall ? 40 : 84, capY = H - (tall ? 26 : 36) - capH, capW2 = tall ? W - 80 : Math.min(640, capW);
+  x.fillStyle = L.cap; recRR(x, capX, capY, capW2, capH, 14); x.fill();
+  x.save(); recRR(x, capX, capY, capW2, capH, 14); x.clip();
+  x.fillStyle = L.capInk; x.textAlign = tall ? 'center' : 'left';
+  var cy3 = capY + 12 + capFont;
+  capLines.forEach(function (ln) { x.fillText(ln, tall ? capX + capW2 / 2 : capX + 20, cy3); cy3 += capLh; });
+  x.restore();
+  // progress bar
+  x.fillStyle = 'rgba(255,255,255,.15)'; x.fillRect(0, H - 8, W, 8);
+  x.fillStyle = L.accent;
+  x.fillRect(0, H - 8, W * recClamp((i + recClamp(local / dur, 0, 1)) / n, 0, 1), 8);
+  x.textAlign = 'left';
+}
+function recLoadImages(cfg) {
+  var urls = {};
+  cfg.scenes.forEach(function (s) { if (s.img) urls[s.img] = true; });
+  var out = {};
+  var jobs = Object.keys(urls).map(function (u) {
+    return new Promise(function (resolve) {
+      var im = new Image();
+      im.crossOrigin = 'anonymous';
+      im.onload = function () { out[u] = im; resolve(); };
+      im.onerror = function () { resolve(); };
+      im.src = u;
+      setTimeout(resolve, 5000);
+    });
+  });
+  return Promise.all(jobs).then(function () { return out; });
+}
+function recDataUriToBuffer(dataUri) {
+  var b64 = (dataUri.split(',')[1] || '');
+  var bin = atob(b64), len = bin.length, bytes = new Uint8Array(len);
+  for (var i = 0; i < len; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes.buffer;
+}
+// Fill in any missing scene audio, best effort, 15s total.
+async function recEnsureAudio(cfg) {
+  if (!cfg.narrate || voiceOff) return { got: 0, total: cfg.scenes.length };
+  var missing = cfg.scenes.filter(function (s) { return !s.audio; });
+  if (!missing.length) return { got: cfg.scenes.length, total: cfg.scenes.length };
+  var q = missing.slice();
+  async function worker() { while (q.length && !voiceOff) { var s = q.shift(); var a = await fetchVoice(s.say); if (a) s.audio = a; } }
+  await Promise.race([
+    Promise.all([worker(), worker(), worker(), worker()]),
+    new Promise(function (r) { setTimeout(r, 15000); })
+  ]);
+  var got = cfg.scenes.filter(function (s) { return s.audio; }).length;
+  return { got: got, total: cfg.scenes.length };
+}
+async function recRecord(cfg, onProgress) {
+  var mime = recMime();
+  if (!mime) throw new Error('norecorder');
+  var tall = cfg.shape === 'tall';
+  var W = tall ? 720 : 1280, H = tall ? 1280 : 720;
+  var lay = { W: W, H: H, tall: tall, L: cfg.look, style: cfg.style || 'tello' };
+  try {
+    await Promise.race([
+      Promise.all([
+        document.fonts.load('800 76px Inter'), document.fonts.load('700 32px Inter'),
+        document.fonts.load('600 24px Inter'), document.fonts.load('500 21px Inter')
+      ]),
+      new Promise(function (r) { setTimeout(r, 3000); })
+    ]);
+  } catch (e) {}
+  var imgs = await recLoadImages(cfg);
+  var AC = window.AudioContext || window.webkitAudioContext;
+  var actx = null, dest = null;
+  try { actx = new AC(); if (actx.state === 'suspended') { try { await actx.resume(); } catch (e) {} } dest = actx.createMediaStreamDestination(); } catch (e) { actx = null; }
+  var buffers = [], durs = [];
+  for (var i = 0; i < cfg.scenes.length; i++) {
+    var s = cfg.scenes[i], dur = s.ms / 1000, buf = null;
+    if (s.audio && actx) {
+      try { buf = await actx.decodeAudioData(recDataUriToBuffer(s.audio)); dur = buf.duration; } catch (e) { buf = null; }
+    }
+    buffers.push(buf); durs.push(dur);
+  }
+  var tim = recTimings(cfg, durs);
+  var canvas = document.createElement('canvas'); canvas.width = W; canvas.height = H;
+  var x = canvas.getContext('2d');
+  var tracks = canvas.captureStream(30).getVideoTracks();
+  if (dest) tracks = tracks.concat(dest.stream.getAudioTracks());
+  var rec = new MediaRecorder(new MediaStream(tracks), { mimeType: mime.mime, videoBitsPerSecond: 5000000, audioBitsPerSecond: 128000 });
+  var chunks = [];
+  rec.ondataavailable = function (e) { if (e.data && e.data.size) chunks.push(e.data); };
+  var stopped = new Promise(function (resolve, reject) { rec.onstop = resolve; rec.onerror = function () { reject(new Error('recorder')); }; });
+  var sources = [];
+  var t0 = actx ? actx.currentTime + 0.2 : 0;
+  for (var j = 0; j < buffers.length; j++) {
+    if (!buffers[j] || !actx) continue;
+    var src = actx.createBufferSource(); src.buffer = buffers[j];
+    src.connect(dest); src.connect(actx.destination);
+    try { src.start(t0 + tim.starts[j]); } catch (e) {}
+    sources.push(src);
+  }
+  rec.start(250);
+  var startPerf = performance.now(), LEAD = 0.2;
+  await new Promise(function (resolve) {
+    function frame(now) {
+      var t = (now - startPerf) / 1000 - LEAD;
+      if (t >= tim.total) { try { rec.stop(); } catch (e) {} resolve(); return; }
+      recDraw(x, cfg, lay, Math.max(0, t), tim, imgs, durs);
+      if (onProgress) onProgress(Math.max(0, t), tim.total);
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  });
+  await stopped;
+  sources.forEach(function (s2) { try { s2.stop(); } catch (e) {} });
+  if (actx) { try { actx.close(); } catch (e) {} }
+  return new Blob(chunks, { type: mime.mime || 'video/webm' });
+}
+async function recGetBlob(cfg, stat) {
+  if (recBusy) { stat.textContent = 'Already recording — please wait a moment.'; return null; }
+  recBusy = true;
+  try {
+    stat.style.display = '';
+    var v = await recEnsureAudio(cfg);
+    var key = JSON.stringify(cfg);
+    if (recCache && recCache.key === key && recCache.blob) return recCache;
+    if (v.got < v.total && cfg.narrate) stat.textContent = 'Recording… some lines will be silent (the voice did not record for them).';
+    var blob = await recRecord(cfg, function (done, total) { stat.textContent = 'Recording… ' + Math.round(done) + 's of ' + Math.round(total) + 's. Keep this tab open.'; });
+    var mime = recMime();
+    recCache = { key: key, blob: blob, ext: mime.ext };
+    return recCache;
+  } catch (e) {
+    stat.textContent = e && e.message === 'norecorder' ? 'This browser cannot record a video file — use Download HTML to keep it.' : 'The recording did not work. Try again, or use Download HTML.';
+    return null;
+  } finally { recBusy = false; }
+}
+function recFileName(v, ext) {
+  return ((v.feature || 'video').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'video') + '-video.' + ext;
+}
+async function recDownload(cfg, v, stat) {
+  var c = await recGetBlob(cfg, stat); if (!c) return;
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(c.blob);
+  a.download = recFileName(v, c.ext);
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+  stat.textContent = 'Saved as ' + a.download + '.';
+}
+async function recShare(cfg, v, stat) {
+  var c = await recGetBlob(cfg, stat); if (!c) return;
+  var file = new File([c.blob], recFileName(v, c.ext), { type: c.blob.type });
+  try {
+    if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: v.feature || 'Video' }); stat.textContent = 'Shared.'; }
+    else stat.textContent = 'Sharing is not available in this browser — use Download MP4.';
+  } catch (e) { /* the visitor cancelled the share sheet */ }
+}
+function recCopyText(text, stat) {
+  function done(ok) { stat.textContent = ok ? 'Link copied: ' + text : 'Copy this link: ' + text; }
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(false); });
+  else done(false);
+}
+async function recCopyLink(cfg, v, stat) {
+  var c = await recGetBlob(cfg, stat); if (!c) return;
+  if (c.url) { recCopyText(c.url, stat); return; }
+  stat.textContent = 'Uploading the video to tello.live…';
+  try {
+    var r = await fetch('/api/public/video-share', { method: 'POST', headers: { 'Content-Type': c.blob.type }, body: c.blob });
+    var d = await r.json().catch(function () { return {}; });
+    if (!r.ok || !d.url) { stat.textContent = (d && d.error) || 'The upload did not work. Try Download MP4 instead.'; return; }
+    c.url = d.url; recCopyText(d.url, stat);
+  } catch (e) { stat.textContent = 'Could not reach tello.live. Try Download MP4 instead.'; }
+}
+
 /* ───────────────────────── Chat ───────────────────────── */
 var $ = function (id) { return document.getElementById(id); };
 var col = $('col'), log = $('log'), box = $('msg'), sendBtn = $('send');
@@ -391,7 +928,27 @@ async function addVideo(v, m) {
     var a = document.createElement('a'), url = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
     a.href = url; a.download = (v.feature.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'video') + '-video.html'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
   });
-  act.appendChild(dl); m.appendChild(act);
+  act.appendChild(dl);
+  // MP4 download + share, recorded in the browser from this same video.
+  var mp = recMime();
+  if (mp) {
+    var dlMp4 = document.createElement('button'); dlMp4.type = 'button'; dlMp4.className = 'btn solid'; dlMp4.textContent = mp.ext === 'mp4' ? 'Download MP4' : 'Download video';
+    dlMp4.addEventListener('click', function () { recDownload(cfg, v, mp4stat); });
+    act.appendChild(dlMp4);
+    if (navigator.share && navigator.canShare) {
+      var sh = document.createElement('button'); sh.type = 'button'; sh.className = 'btn'; sh.textContent = 'Share';
+      sh.addEventListener('click', function () { recShare(cfg, v, mp4stat); });
+      act.appendChild(sh);
+    }
+    var cp = document.createElement('button'); cp.type = 'button'; cp.className = 'btn'; cp.textContent = 'Copy link';
+    cp.addEventListener('click', function () { recCopyLink(cfg, v, mp4stat); });
+    act.appendChild(cp);
+  }
+  m.appendChild(act);
+  var mp4note = document.createElement('p'); mp4note.className = 'hint';
+  mp4note.textContent = mp ? 'Download MP4 saves the video as a file on your device. Copy link uploads it to tello.live so you can share the link.' : 'This browser cannot record a video file — use Download HTML to keep it.';
+  m.appendChild(mp4note);
+  var mp4stat = document.createElement('p'); mp4stat.className = 'hint'; mp4stat.style.display = 'none'; m.appendChild(mp4stat);
   var tip = document.createElement('p'); tip.className = 'hint'; tip.textContent = 'Press Play in the video. Sound starts after you press Play.'; m.appendChild(tip);
   var others = STYLES.filter(function (x) { return x[0] !== (v.style || 'tello'); });
   var q = document.createElement('p'); q.className = 'hint'; q.textContent = 'Like it? Try another style:'; m.appendChild(q);
